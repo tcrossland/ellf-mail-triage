@@ -1,0 +1,16 @@
+.DS_Store
+docs/local/
+
+# Python and uv
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Real mail stays outside the repo; these catch it if it lands here
+/data/
+*.mbox
+
+# Claude Code
+/.claude/worktrees/
+.claude/settings.local.json
