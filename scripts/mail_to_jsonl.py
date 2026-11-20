@@ -23,6 +23,7 @@ With --no-header-lines it is the body alone. The meta holds:
     list_unsubscribe   whether the List-Unsubscribe header is present
     gmail_category     personal, social, promotions, updates or forums, from
                        Gmail's category label; null when there is none
+    sent               whether Gmail labelled it Sent or Drafts: your own mail
 
 The same message gives the same record from every kind of SOURCE. Records are
 sorted by date, then id, and a message seen twice is written once. Chats
@@ -68,6 +69,7 @@ class Record:
     from_domain: str | None
     list_unsubscribe: bool
     gmail_category: str | None
+    sent: bool = False
 
     def to_json(self) -> str:
         meta = {
@@ -77,6 +79,7 @@ class Record:
             "from_domain": self.from_domain,
             "list_unsubscribe": self.list_unsubscribe,
             "gmail_category": self.gmail_category,
+            "sent": self.sent,
         }
         return json.dumps({"text": self.text, "meta": meta}, ensure_ascii=False)
 
@@ -160,6 +163,11 @@ def gmail_category(labels: Iterable[str]) -> str | None:
 
 def is_chat(labels: Iterable[str]) -> bool:
     return any(_label_key(label) in ("CHAT", "CHATS") for label in labels)
+
+
+def is_sent(labels: Iterable[str]) -> bool:
+    """Your own mail: Gmail's SENT or DRAFT label (gyb), Sent or Drafts (Takeout)."""
+    return any(_label_key(label) in ("SENT", "DRAFT", "DRAFTS") for label in labels)
 
 
 class _TextOfHtml(HTMLParser):
@@ -281,6 +289,7 @@ def to_record(
         from_domain=domain,
         list_unsubscribe=unsubscribe,
         gmail_category=gmail_category(labels),
+        sent=is_sent(labels),
     )
 
 

@@ -90,7 +90,7 @@ ARCHIVE = [
             plain="Merci beaucoup, à bientôt.",
             charset="latin-1",
         ),
-        ["INBOX"],
+        ["SENT"],
     ),
     (
         _message(
@@ -119,7 +119,7 @@ def _takeout_name(label: str) -> str:
     """A Gmail label ID as Takeout names it (unverified: see docs/facts.md)."""
     if label.startswith("CATEGORY_"):
         return "Category " + label.removeprefix("CATEGORY_").title()
-    return {"INBOX": "Inbox", "CHAT": "Chat"}.get(label, label)
+    return {"INBOX": "Inbox", "CHAT": "Chat", "SENT": "Sent"}.get(label, label)
 
 
 def _labels_header(labels: list[str]) -> str:
@@ -247,6 +247,20 @@ def test_non_utf8_body_and_missing_message_id(sources):
     assert cafe[0].gmail_category is None
 
 
+def test_sent_mail_is_flagged_from_every_source(sources):
+    for path in sources.values():
+        records, _ = _convert(path)
+        assert [r.text.endswith("à bientôt.") for r in records] == [r.sent for r in records]
+
+
+@pytest.mark.parametrize(
+    "labels, expected",
+    [({"SENT", "INBOX"}, True), ({"Drafts"}, True), ({"DRAFT"}, True), ({"Inbox"}, False)],
+)
+def test_is_sent(labels, expected):
+    assert m2j.is_sent(labels) is expected
+
+
 def test_no_address_local_part_is_kept(sources):
     records, _ = _convert(sources["mbox"])
     dumped = "\n".join(r.to_json() for r in records)
@@ -320,4 +334,5 @@ def test_main_writes_jsonl(sources, tmp_path, capsys):
     lines = [json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()]
     assert len(lines) == 5
     assert all(set(line) == {"text", "meta"} for line in lines)
+    assert sum(line["meta"]["sent"] for line in lines) == 1
     assert "wrote 5" in capsys.readouterr().err

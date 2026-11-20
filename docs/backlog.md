@@ -2,19 +2,6 @@
 
 In order. Each item says when it is done.
 
-3. **Label scheme and splits.** Write the default scheme as
-   `assets/mail_kinds.json` (each label's description, what not to give
-   it, and examples from the synthetic mail) and
-   `assets/mail_kinds_guidelines.md`. Write `scripts/make_splits.py`,
-   standard library only, with tests on synthetic mail: about 1,500
-   messages from the importer's JSONL with a fixed seed, spread over the
-   years first; within the years Gmail categorised, at least 30 from each
-   category that has that many and all of any that has fewer. It splits
-   them into a pilot of 100, an eval set of 300 and a training pool of
-   about 1,000, all disjoint, each with the same spread, and the rest as
-   backlog.
-   Done when: both assets publish to the cluster, the script's tests pass,
-   and the splits of the real archive are published.
 4. **Choose the LLMs.** Between `gemini_agent`, `hf_llm_agent` and an
    agent recipe of our own that runs a model on the cluster, none of
    which is settled (see [facts.md](facts.md)). Read the data-use terms of
@@ -27,7 +14,8 @@ In order. Each item says when it is done.
    the disagreements and flags (as helpdesk-routing's pilot does).
    Done when: the scheme is settled, one LLM is chosen to draft the
    training pool, and the bar the model has to reach is written down
-   before anything is scored.
+   before anything is scored: per label, with a limit on the costly
+   mistakes (mail to keep given a kind that is dropped).
 6. **Eval set.** Label the 300 blind, with no model or LLM in the loop. A
    week later, label 50 of them again blind.
    Done when: the eval set is labelled and the self-agreement figure is
@@ -37,19 +25,23 @@ In order. Each item says when it is done.
    Done when: the pool is curated.
 8. **Train and score.** Train the text classifier, with a learning curve
    (`train --train-curve`) to see whether more labels still help. Score
-   the model and each LLM against the eval set, overall, per label, and on
-   the slice Gmail never categorised (mail from before late 2010). Score
-   Gmail's categories too, through the default scheme's mapping, as a
-   side comparison. Record time and cost per 1,000 messages for the model
-   and each LLM.
+   the model and each LLM against the eval set, overall, per label, and
+   for each five-year period of the archive, with the number of eval
+   messages behind each score; the overall score weights each period by
+   its share of the archive. Score Gmail's categories too, through the
+   default scheme's mapping and only on messages that have one, as a side
+   comparison. Record time and cost per 1,000 messages for the model and
+   each LLM.
    Done when: the scores and costs are in a results table, and the model
    is judged against the bar from step 5.
 9. **Export and publish.** Export with `/ellf-template`, swap in synthetic
    sample mail, and fill the fields ellf-templates' AGENTS.md lists for
    `templates.json`. The README says how to use your own categories (the
-   two assets and the `review` tasks' label lists) and that only the
-   default scheme is tested. Tags: Text Classification, LLM Distillation,
-   Evaluation, Data Import & Export, spaCy, and the chosen LLM.
+   two assets and the `review` tasks' label lists), that only the default
+   scheme is tested, and that a kind is advice: rules that act on it have
+   to check legal holds and duties to keep records themselves. Tags: Text
+   Classification, LLM Distillation, Evaluation, Data Import & Export,
+   spaCy, and the chosen LLM.
    Done when: this repo is public with the template and the write-up, and
    nothing in it comes from real mail.
 10. **Offer it to Explosion.** By their documented route for contributed
@@ -78,3 +70,20 @@ In order. Each item says when it is done.
    Done 2026-11-20: identical JSONL from all three on synthetic mail, and
    `ellf publish data` took it. The gyb label format is checked on real
    backups; Takeout's is not yet (see [facts.md](facts.md)).
+3. **Label scheme and splits.** Write the default scheme as
+   `assets/mail_kinds.json` (each label's description, what not to give
+   it, and examples from the synthetic mail) and
+   `assets/mail_kinds_guidelines.md`. Write `scripts/make_splits.py`,
+   standard library only, with tests on synthetic mail: about 1,500
+   received messages (sent mail and drafts left out) from the importer's
+   JSONL with a fixed seed, spread over the years first; within the years
+   Gmail categorised, at least 30 from each category that has that many
+   and all of any that has fewer. It splits them into a pilot of 100, an
+   eval set of 300 and a training pool of about 1,000, all disjoint, each
+   with the same spread, and the rest as backlog.
+   Done when: both assets publish to the cluster, the script's tests pass,
+   and the splits of the real archive are published.
+   Done 2026-11-20: both assets published as version 0.1.0; the splits of
+   one Gmail backup published as `Mail (pilot)`, `Mail (eval)` and
+   `Mail (train)`. Version 1.1.0 draws enough from each five-year period
+   for the eval set to hold about 30 of it, so step 8 can score by age.
