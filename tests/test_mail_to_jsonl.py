@@ -290,6 +290,51 @@ def test_gmail_category(labels, expected):
     assert m2j.gmail_category(labels) == expected
 
 
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("Thanks for the photos. We will refund the chair, you don't need to send it back.", "en"),
+        (
+            "Hola, gracias por las fotos. Te devolvemos el dinero y no hace falta enviar la silla.",
+            "es",
+        ),
+        (
+            "Bonjour, merci pour les photos. Nous vous remboursons, pas besoin de la chaise.",
+            "fr",
+        ),
+        (
+            "Hallo, danke für die Fotos. Wir erstatten den Betrag, Sie müssen nicht schicken.",
+            "de",
+        ),
+        (
+            "Olá, obrigado pelas fotos. Não é preciso devolver, você recebe o valor com isso.",
+            "pt",
+        ),
+        (
+            "Ciao, grazie per le foto. Non è necessario rispedire la sedia, è già fatto.",
+            "it",
+        ),
+        ("OK, 10:30", None),
+        ("Thanks and gracias y the plan el plan", None),
+    ],
+)
+def test_guess_language(text, expected):
+    assert m2j.guess_language(text) == expected
+
+
+def test_language_is_guessed_from_the_body_only():
+    msg = _message(
+        "Ana Ruiz <ana@example.org>",
+        "Please read: the plan for the year",
+        "Mon, 02 Mar 2015 10:00:00 +0000",
+        plain="Hola, te mando el plan para el año. Gracias por todo y saludos.",
+        message_id="<plan.1@example.org>",
+    )
+    record = m2j.to_record(msg.as_bytes(), frozenset())
+    assert record.lang == "es"
+    assert json.loads(record.to_json())["meta"]["lang"] == "es"
+
+
 def test_duplicates_are_written_once():
     raw = ARCHIVE[0][0].as_bytes()
     records, counts = m2j.convert([(raw, frozenset()), (raw, frozenset())])

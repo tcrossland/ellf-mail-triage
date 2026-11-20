@@ -1,35 +1,11 @@
 {
-  "PERSONAL": {
-    "description": "Written by a person to you or to a small group you belong to, about your life outside work: friends and family, questions, replies, plans, news, a person at a company answering you about your own case as a customer. Keep it as correspondence.",
-    "do_not_mark": [
-      "a colleague, client or recruiter writing to you about your job (WORK)",
-      "a newsletter or campaign written in a person's name but sent to many people (BULK)",
-      "a post to a mailing list or group of people who mostly don't know each other (LIST)",
-      "automated mail signed with a person's name, such as an account manager's welcome message (NOTIFICATION or BULK)",
-      "an invoice or receipt, even when a person sent it (TRANSACTIONAL)"
-    ],
-    "examples": [
-      {
-        "text": "From: Ada Lovelace (example.com)\nSubject: Lunch on Friday?\nList-Unsubscribe: no\n\nHi, are you free for lunch on Friday? There's a new place near the station. Ada",
-        "label": "PERSONAL"
-      },
-      {
-        "text": "From: Sam Okafor (support.example.org)\nSubject: Re: Case 48213, refund for a damaged chair\nList-Unsubscribe: no\n\nThanks for the photos. I've checked with the warehouse and we'll refund the chair in full; you don't need to send it back. Sam",
-        "label": "PERSONAL"
-      },
-      {
-        "text": "From: Example Weekly (example.net)\nSubject: Ten things I learnt this year\nList-Unsubscribe: yes\n\nHello friends, it's been a busy year and I wanted to share a few lessons with all of you."
-      }
-    ]
-  },
   "WORK": {
-    "description": "Written by a person to you or to a small group you belong to, about your job: colleagues, managers, clients, suppliers, recruiters, meeting arrangements, replies in a work thread. Keep it as correspondence, unless your rules say otherwise for an old employer's mail.",
+    "description": "Mail about your job: a colleague, manager, client, supplier or recruiter writing to you or a small group you belong to, and the job's own paperwork, such as a quote, an invoice to or from your work, a contract or a work travel booking. Keep it.",
     "do_not_mark": [
-      "automated mail from a work system, such as a ticket update, build alert or calendar notice (NOTIFICATION)",
+      "automated mail from a work system, such as a ticket update, build alert or calendar notice (AUTOMATED)",
       "a company-wide announcement or newsletter sent to everyone (BULK)",
-      "an expense receipt, invoice or travel booking for work (TRANSACTIONAL)",
-      "a post to a professional mailing list or discussion group (LIST)",
-      "a person writing about your life outside work, even a colleague (PERSONAL)"
+      "a colleague writing about your life outside work (PERSONAL)",
+      "a receipt or booking for something you bought for yourself (ADMIN)"
     ],
     "examples": [
       {
@@ -37,7 +13,7 @@
         "label": "WORK"
       },
       {
-        "text": "From: Chidi Eze (recruit.example.org)\nSubject: Senior analyst role\nList-Unsubscribe: no\n\nHello, I came across your profile and wondered whether you'd be open to a chat about a senior analyst role at a client of ours. Are you free next week? Chidi",
+        "text": "From: Example Print Ltd (print.example.org)\nSubject: Invoice 2231 for the conference posters\nList-Unsubscribe: no\n\nPlease find attached our invoice for the 40 posters delivered to your office on 3 May. Payment within 30 days.",
         "label": "WORK"
       },
       {
@@ -45,87 +21,88 @@
       }
     ]
   },
-  "TRANSACTIONAL": {
-    "description": "A record of something you bought, booked, paid or signed: receipts, invoices, order and booking confirmations, tickets, bank and card statements, tax documents, contracts. Keep it as a record, whoever sent it.",
+  "PERSONAL": {
+    "description": "Written by a person you know to you or a small group you belong to, about your life outside work: friends and family, plans, news, questions, replies. Keep it as correspondence.",
     "do_not_mark": [
-      "shipping and delivery updates about an order (NOTIFICATION)",
-      "a reminder that a payment is due, without the bill or statement itself (NOTIFICATION)",
-      "offers from a shop you bought from (BULK)"
+      "a colleague, client or recruiter writing about your job (WORK)",
+      "a person at a company or public body dealing with your own affairs, such as your bank, landlord or doctor's surgery (ADMIN)",
+      "a newsletter or campaign written in a person's name but sent to many people (BULK)",
+      "a post to a mailing list or group (BULK)"
+    ],
+    "examples": [
+      {
+        "text": "From: Ada Lovelace (example.com)\nSubject: Lunch on Friday?\nList-Unsubscribe: no\n\nHi, are you free for lunch on Friday? There's a new place near the station. Ada",
+        "label": "PERSONAL"
+      },
+      {
+        "text": "From: Jo Bloggs (example.net)\nSubject: Re: Photos from the wedding\nList-Unsubscribe: no\n\nThese are lovely, thank you! Mum wants a print of the one by the lake. Love, Jo",
+        "label": "PERSONAL"
+      },
+      {
+        "text": "From: Sam Okafor (support.example.org)\nSubject: Re: Case 48213, refund for a damaged chair\nList-Unsubscribe: no\n\nThanks for the photos. I've checked with the warehouse and we'll refund the chair in full; you don't need to send it back. Sam"
+      }
+    ]
+  },
+  "ADMIN": {
+    "description": "Your own affairs with organisations, outside work: receipts, orders, bookings, bank and card statements, contracts, and dealings with tax and government, health, school, housing, insurance and utilities, including a person at a company answering your query or complaint. Keep it as a record.",
+    "do_not_mark": [
+      "routine automated mail about an account, such as a sign-in code, a shipping update or a reminder that a bill is ready (AUTOMATED)",
+      "offers and newsletters from a company you deal with (BULK)",
+      "a quote, invoice or booking for your job (WORK)"
     ],
     "examples": [
       {
         "text": "From: Example Rail (example.org)\nSubject: Your booking is confirmed\nList-Unsubscribe: no\n\nBooking reference ABC123. London to Leeds, 14 March, coach C, seat 42. Total paid: 54.20.",
-        "label": "TRANSACTIONAL"
+        "label": "ADMIN"
       },
       {
-        "text": "From: Example Bank (bank.example.com)\nSubject: Your March statement is ready\nList-Unsubscribe: no\n\nYour statement for the account ending 0000 is attached. Opening balance, payments in and out, closing balance.",
-        "label": "TRANSACTIONAL"
+        "text": "From: Sam Okafor (support.example.org)\nSubject: Re: Case 48213, refund for a damaged chair\nList-Unsubscribe: no\n\nThanks for the photos. I've checked with the warehouse and we'll refund the chair in full; you don't need to send it back. Sam",
+        "label": "ADMIN"
       },
       {
         "text": "From: Example Shop (shop.example.org)\nSubject: Your parcel is on its way\nList-Unsubscribe: no\n\nGood news: order 1001 has left our warehouse and should arrive on Thursday. Track it here."
       }
     ]
   },
-  "NOTIFICATION": {
-    "description": "Automated mail about your own account or activity: alerts, sign-in codes, password resets and security notices, shipping and delivery updates, reminders, someone commenting on or liking something of yours, changes to a service you use. Useful for a while, rarely worth keeping.",
+  "AUTOMATED": {
+    "description": "Mail a system sends about your own account or activity: sign-in codes, password resets, security notices, shipping and delivery updates, reminders, someone commenting on something of yours, notices from work systems. Useful for a while, rarely worth keeping.",
     "do_not_mark": [
-      "a record of a payment, order or booking (TRANSACTIONAL)",
+      "a record of a payment, order or booking, or a decision about your affairs, such as a tax assessment or an insurance claim outcome (ADMIN)",
       "the same campaign or newsletter sent to everyone (BULK)",
-      "a person writing to you, even through a service's contact form (PERSONAL or WORK)"
+      "a person writing to you, even through a service's contact form (PERSONAL, WORK or ADMIN)"
     ],
     "examples": [
       {
         "text": "From: Example Cloud (example.com)\nSubject: Your sign-in code\nList-Unsubscribe: no\n\nYour code is 482913. It expires in 10 minutes. If you didn't try to sign in, change your password.",
-        "label": "NOTIFICATION"
+        "label": "AUTOMATED"
       },
       {
         "text": "From: Example Social (example.net)\nSubject: Jo Bloggs commented on your photo\nList-Unsubscribe: yes\n\nJo Bloggs commented: \"Lovely view!\" Reply on Example Social.",
-        "label": "NOTIFICATION"
+        "label": "AUTOMATED"
       },
       {
-        "text": "From: Example Rail (example.org)\nSubject: Your booking is confirmed\nList-Unsubscribe: no\n\nBooking reference ABC123. Total paid: 54.20."
+        "text": "From: Example Bank (bank.example.com)\nSubject: Your March statement is ready\nList-Unsubscribe: no\n\nYour statement for the account ending 0000 is attached. Opening balance, payments in and out, closing balance."
       }
     ]
   },
   "BULK": {
-    "description": "The same message sent to many people: newsletters, marketing and offers, product announcements, surveys, fundraising appeals, event invitations sent to a whole list. Safe to drop unless you want it.",
+    "description": "The same message sent to many people: newsletters, marketing and offers, announcements, and mailing lists or groups where members write to each other. Usually safe to drop.",
     "do_not_mark": [
-      "a group discussion where members write to each other (LIST)",
-      "a notice about your own account or activity (NOTIFICATION)",
-      "a receipt or booking that also carries an offer (TRANSACTIONAL)"
+      "a person writing to you or a small group you know (PERSONAL or WORK)",
+      "automated mail about your own account, even with an unsubscribe link (AUTOMATED)",
+      "a receipt or booking, even from a shop that also sends offers (ADMIN)"
     ],
     "examples": [
-      {
-        "text": "From: Example Deals (shop.example.org)\nSubject: 50% off everything this weekend\nList-Unsubscribe: yes\n\nBig sale. Shop now and save on everything in store until Sunday.",
-        "label": "BULK"
-      },
       {
         "text": "From: Example Weekly (example.net)\nSubject: Ten things I learnt this year\nList-Unsubscribe: yes\n\nHello friends, it's been a busy year and I wanted to share a few lessons with all of you.",
         "label": "BULK"
       },
       {
-        "text": "From: Garden Club (lists.example.org)\nSubject: Re: [garden] Slugs on the lettuces\nList-Unsubscribe: yes\n\nI've had luck with copper tape round the beds. Has anyone tried beer traps?"
-      }
-    ]
-  },
-  "LIST": {
-    "description": "A message to a mailing list or group where members write to each other: discussion lists, Google Groups, a club's, class's or project's list, and digests of such a list.",
-    "do_not_mark": [
-      "a one-way newsletter, even one that comes through list software (BULK)",
-      "a thread among a few people you know, sent to them directly (PERSONAL or WORK)",
-      "notifications from a tool such as an issue tracker about something you follow (NOTIFICATION)"
-    ],
-    "examples": [
-      {
-        "text": "From: Garden Club (lists.example.org)\nSubject: Re: [garden] Slugs on the lettuces\nList-Unsubscribe: yes\n\nI've had luck with copper tape round the beds. Has anyone tried beer traps?",
-        "label": "LIST"
+        "text": "From: Lee Chan via Example Hikers (groups.example.org)\nSubject: [hikers] Route for Sunday?\nList-Unsubscribe: yes\n\nIs anyone doing the ridge walk on Sunday? I can drive two people from the station.",
+        "label": "BULK"
       },
       {
-        "text": "From: Example Users (groups.example.com)\nSubject: Digest for example-users, 4 updates in 2 topics\nList-Unsubscribe: yes\n\nTopic: Install fails on version 2.1. Topic: Meet-up in March.",
-        "label": "LIST"
-      },
-      {
-        "text": "From: Example Deals (shop.example.org)\nSubject: 50% off everything this weekend\nList-Unsubscribe: yes\n\nBig sale. Shop now and save on everything in store until Sunday."
+        "text": "From: Ada Lovelace (example.com)\nSubject: Lunch on Friday?\nList-Unsubscribe: no\n\nHi, are you free for lunch on Friday? There's a new place near the station. Ada"
       }
     ]
   }

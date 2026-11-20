@@ -71,19 +71,32 @@ supported but not tested.
   on it, and old mail is what an archive is sorted to clear out. Old
   periods are oversampled for this, so the overall score weights each
   period by its share of the archive.
-- **The default scheme sorts by what to keep**, for mailcellar. It follows
-  Gmail's categories where they serve retention and splits Updates, which
-  mixes mail to keep with mail to drop:
-  - `PERSONAL`: written by a person to you or a small group, about your
-    life outside work.
-  - `WORK`: written by a person to you or a small group, about your job.
-    Added in the pilot, where work mail turned up from the first message.
-  - `TRANSACTIONAL`: receipts, invoices, orders, bookings, statements. Kept
+- **Results are given by language too.** An archive is often in more than
+  one language: in the one checked, over half the mail is in one language
+  and most of the rest in another. In the pilot labels the language went
+  with the kind: most mail in the first language was work, and nearly all
+  automated mail was in the second. A model can learn the language as a
+  shortcut and score well overall while mislabelling, say, personal mail
+  in the language that is mostly work. So scores are also given per
+  language, from the importer's guess, with the number of eval messages
+  behind each. The LLM's agreement with the person in the pilot is given
+  by language too, since its prompt is in English.
+- **The default scheme sorts by what to keep**, for mailcellar: work,
+  personal mail and your own records are kept, automated and bulk mail can
+  go. It is built around that, not around Gmail's categories, though it
+  maps onto them at a coarser level for the side comparison below. It was
+  settled in the pilot from a profile of the archive (counts only) and the
+  person's labels: most received mail is correspondence with people at
+  organisations, and bulk mail and mailing lists are rare.
+  - `WORK`: mail about your job, from people and the job's own paperwork.
+  - `PERSONAL`: a person you know writing about your life outside work.
+  - `ADMIN`: your own affairs with organisations: receipts, bookings,
+    statements, contracts, tax, health, school, housing, insurance. Kept
     as records.
-  - `NOTIFICATION`: automated alerts, shipping updates, social network
-    mail, sign-in codes.
-  - `BULK`: newsletters and marketing.
-  - `LIST`: mailing lists and group discussions.
+  - `AUTOMATED`: mail a system sends about your account or activity:
+    codes, alerts, shipping updates, reminders, notices from work systems.
+  - `BULK`: the same message sent to many people: newsletters, marketing,
+    announcements and mailing lists.
 - **A kind is advice, not a decision to delete.** The template labels
   mail; what is kept or offloaded is decided by rules in the tool that
   acts on the labels, such as mailcellar's. Legal holds, duties to keep
@@ -94,18 +107,18 @@ supported but not tested.
   equal: mail to keep given a kind that is dropped may be offloaded, while
   mail to drop given a kind that is kept only takes up space. So the bar
   the model has to reach names the costly mistakes and limits them, as
-  well as setting overall agreement; for the default scheme, `PERSONAL`,
-  `WORK` or `TRANSACTIONAL` mail labelled `NOTIFICATION` or `BULK`. With
-  your own scheme, you name the costly mistakes. The bar is written down
-  in the pilot, before anything is scored.
+  well as setting overall agreement; for the default scheme, `WORK`,
+  `PERSONAL` or `ADMIN` mail labelled `AUTOMATED` or `BULK`. With your own
+  scheme, you name the costly mistakes. The bar is written down in the
+  pilot, before anything is scored.
 - **Gmail's categories are an optional comparison**, not part of the
   headline. Where a scheme maps onto them, they are scored as one more
   annotator, at the coarser level, as llm-classifier-eval treats an LLM.
-  For the default scheme the mapping is Primary to `PERSONAL` or `WORK`,
-  Promotions to `BULK`, Forums to `LIST`, Social to `NOTIFICATION`, and
-  Updates to `TRANSACTIONAL` or `NOTIFICATION`; in the archive checked
-  this mostly measures Primary against Updates. It is scored only on the
-  messages that have a category.
+  For the default scheme the mapping is Primary to `WORK`, `PERSONAL` or
+  `ADMIN`, Updates to `ADMIN` or `AUTOMATED`, Social to `AUTOMATED`, and
+  Promotions and Forums to `BULK`; in the archive checked this mostly
+  measures Primary against Updates. It is scored only on the messages that
+  have a category.
 - **Text the model sees**: the sender's name and domain, the subject,
   whether there's a `List-Unsubscribe` header, then the first part of the
   visible body text. Whether the header lines help is measured, not
@@ -134,19 +147,23 @@ supported but not tested.
   curating in the pilot, eval set and training pool. Energy is not
   measured; time on one machine stands in for it. A cloud LLM's fee isn't
   measured either, since none is used.
-- **Train from a blank English pipeline**, so there is no base model whose
-  licence needs checking, and CPU is enough.
+- **Train from a blank pipeline**, so there is no base model whose licence
+  needs checking, and CPU is enough. Whether it is English (`en`) or
+  spaCy's multi-language one (`xx`) is measured on the eval set, not
+  assumed, since an archive is often not all English.
 - **The importer is a script run on the host**, not a recipe on the
   cluster: `scripts/mail_to_jsonl.py`, standard library only, reading an
   mbox (Google Takeout), a folder of `.eml` files, or a Got Your Back
-  backup (its `msg-db.sqlite` for labels). It writes JSONL (`text`, `meta`)
-  for `ellf publish data`, as support-insights' input is. The meta keeps
-  only a hash of the Message-ID, the date and year, the sender's domain,
-  whether there's a `List-Unsubscribe` header, Gmail's category and
-  whether it is your own mail (Gmail's Sent or Drafts); no address,
+  backup (its `msg-db.sqlite` for labels). It writes JSONL (`text`,
+  `meta`) for `ellf publish data`, as support-insights' input is. The meta
+  keeps only a hash of the Message-ID, the date and year, the sender's
+  domain, whether there's a `List-Unsubscribe` header, Gmail's category
+  and whether it is your own mail (Gmail's Sent or Drafts), and a rough
+  guess at the body's language from its common words; no address,
   recipient or user label is kept, and chats are dropped.
   `--no-header-lines` writes the body alone, for measuring whether the
-  header lines help. The llm-to-jev template ships a `scripts/` folder too.
+  header lines help. The llm-to-jev template ships a `scripts/` folder
+  too.
 - **Nothing from real mail is published.** The template ships synthetic
   sample mail with fictional senders, as support-insights ships generated
   tickets. The write-up gives only figures, never a quoted message, and

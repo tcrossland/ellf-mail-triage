@@ -24,6 +24,8 @@ With --no-header-lines it is the body alone. The meta holds:
     gmail_category     personal, social, promotions, updates or forums, from
                        Gmail's category label; null when there is none
     sent               whether Gmail labelled it Sent or Drafts: your own mail
+    lang               a rough guess at the body's language from its common
+                       words: en, es, fr, de, pt or it; null when unclear
 
 The same message gives the same record from every kind of SOURCE. Records are
 sorted by date, then id, and a message seen twice is written once. Chats
@@ -56,6 +58,24 @@ GYB_DB = "msg-db.sqlite"
 CATEGORIES = ("personal", "social", "promotions", "updates", "forums")
 DEFAULT_BODY_CHARS = 1000
 
+# Common short words that mostly belong to one language, for a rough guess.
+COMMON_WORDS: dict[str, frozenset[str]] = {
+    lang: frozenset(words.split())
+    for lang, words in {
+        "en": "the and of to is you your that this with for are have will please "
+        "thanks from was not be our can would",
+        "es": "el los las del y por para con una es está gracias hola saludos pero "
+        "más muy usted también este esta nos le lo",
+        "fr": "le les des et est pour avec une vous nous pas sur dans merci bonjour "
+        "mais très aussi cette",
+        "de": "der die und ist nicht mit ein eine sie wir für auf den dem bitte danke "
+        "auch sehr oder",
+        "pt": "os não você obrigado obrigada também com muito isso são olá foi ao uma mas nós",
+        "it": "il gli che non per sono è della delle anche grazie ciao molto ma questo questa",
+    }.items()
+}
+_WORD = re.compile(r"[^\W\d_]+")
+
 _PARSER = BytesParser(policy=policy.default)
 _SPACE = re.compile(r"\s+")
 
@@ -70,6 +90,7 @@ class Record:
     list_unsubscribe: bool
     gmail_category: str | None
     sent: bool = False
+    lang: str | None = None
 
     def to_json(self) -> str:
         meta = {
@@ -80,6 +101,7 @@ class Record:
             "list_unsubscribe": self.list_unsubscribe,
             "gmail_category": self.gmail_category,
             "sent": self.sent,
+            "lang": self.lang,
         }
         return json.dumps({"text": self.text, "meta": meta}, ensure_ascii=False)
 
@@ -168,6 +190,23 @@ def is_chat(labels: Iterable[str]) -> bool:
 def is_sent(labels: Iterable[str]) -> bool:
     """Your own mail: Gmail's SENT or DRAFT label (gyb), Sent or Drafts (Takeout)."""
     return any(_label_key(label) in ("SENT", "DRAFT", "DRAFTS") for label in labels)
+
+
+def guess_language(text: str, min_words: int = 3) -> str | None:
+    """The language whose common words the text uses most, if clearly ahead.
+
+    None when fewer than `min_words` common words are found, or when the
+    runner-up has more than two thirds as many.
+    """
+    words = _WORD.findall(text.lower())
+    hits = sorted(
+        ((sum(w in common for w in words), lang) for lang, common in COMMON_WORDS.items()),
+        reverse=True,
+    )
+    (best, lang), (second, _) = hits[0], hits[1]
+    if best < min_words or second * 3 > best * 2:
+        return None
+    return lang
 
 
 class _TextOfHtml(HTMLParser):
@@ -290,6 +329,7 @@ def to_record(
         list_unsubscribe=unsubscribe,
         gmail_category=gmail_category(labels),
         sent=is_sent(labels),
+        lang=guess_language(body),
     )
 
 

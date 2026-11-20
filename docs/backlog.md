@@ -25,26 +25,45 @@ In order. Each item says when it is done.
      life outside work.
    - The pilot restarted as task `mail-pilot-2` (dataset `mail_pilot_2`).
      The 0.1.0 task is stopped.
-   - Left: your labels, the LLM's answers on 0.2.0 (into
-     `mail_pilot_llm_2`; a first run was stopped part way, so it saved
-     nothing), then settling the scheme.
-6. **Eval set.** Label the 300 blind, with no model or LLM in the loop. A
-   week later, label 50 of them again blind.
+   - You labelled the 100 in 8.9 min, about 5 s a message, with none
+     flagged. WORK is the largest kind (39), and there is no LIST.
+   - Over half the pilot is in one language, and the kind goes with the
+     language, so results are now given by language (see design.md) and
+     the importer guesses each message's language.
+   - On 0.2.0 the LLM agreed with you on 54 of 100 (59% and 51% in the two
+     main languages), with 3 costly mistakes. It gave TRANSACTIONAL 28
+     times to your 10, 13 of them on mail you called WORK.
+   - A profile of the received archive (counts only) showed mostly
+     correspondence with people at organisations, 5% with List-Unsubscribe
+     and about 2% list mail. So scheme 0.3.0 has five kinds: WORK,
+     PERSONAL, ADMIN (your own records and affairs, absorbing
+     TRANSACTIONAL), AUTOMATED (was NOTIFICATION) and BULK (absorbing
+     LIST). A job's paperwork is WORK.
+   - The pilot restarts as task `mail-pilot-3` (dataset `mail_pilot_3`);
+     the 0.2.0 task is stopped.
+   - Left: your labels on 0.3.0, the LLM's answers on it (into
+     `mail_pilot_llm_3`), its agreement with you overall and by language,
+     then settling the scheme and writing down the bar.
+6. **Eval set.** Re-import and republish the splits first, so their meta
+   has the language guess; the same archive and seed give the same
+   splits. Label the 300 blind, with no model or LLM in the loop. A week
+   later, label 50 of them again blind.
    Done when: the eval set is labelled and the self-agreement figure is
    recorded.
 7. **Training pool.** The local LLM drafts labels; the person curates them
    (support-insights' `curate` task).
    Done when: the pool is curated.
 8. **Train and score.** Train the text classifier, with a learning curve
-   (`train --train-curve`) to see whether more labels still help. Score
-   the model and the local LLM against the eval set, overall, per label, and
-   for each five-year period of the archive, with the number of eval
-   messages behind each score; the overall score weights each period by
-   its share of the archive. Score Gmail's categories too, through the
-   default scheme's mapping and only on messages that have one, as a side
-   comparison. Record the time per 1,000 messages for the model and the
-   local LLM on the same machine, the training time, and the person's
-   hours in steps 5 to 7.
+   (`train --train-curve`) to see whether more labels still help, from a
+   blank `en` pipeline and from a blank `xx` one, and keep the better.
+   Score the model and the local LLM against the eval set, overall, per
+   label, for each five-year period of the archive and for each language,
+   with the number of eval messages behind each score; the overall score
+   weights each period by its share of the archive. Score Gmail's
+   categories too, through the default scheme's mapping and only on
+   messages that have one, as a side comparison. Record the time per 1,000
+   messages for the model and the local LLM on the same machine, the
+   training time, and the person's hours in steps 5 to 7.
    Done when: the scores and costs are in a results table, and the model
    is judged against the bar from step 5.
 9. **Export and publish.** Export with `/ellf-template`, swap in synthetic
