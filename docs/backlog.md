@@ -2,42 +2,63 @@
 
 In order. Each item says when it is done.
 
-3. **Sample and pilot.** Export about 1,500 messages, spread over the
-   years and over Gmail's categories, with a fixed seed: a pilot of 100,
-   an eval set of 300 and a training pool of about 1,000, all disjoint,
-   and the rest as backlog. Label the pilot by hand, with both LLM agents
-   as second opinions, and settle the labels and guidelines from the
-   disagreements (as helpdesk-routing's pilot does).
-   Done when: the label scheme and guidelines are settled, one LLM is
-   chosen to draft the training pool, and the bar the model has to reach
-   is written down before anything is scored.
-4. **Eval set.** Label the 300 blind, with no model or LLM in the loop. A
+3. **Label scheme and splits.** Write the default scheme as
+   `assets/mail_kinds.json` (each label's description, what not to give
+   it, and examples from the synthetic mail) and
+   `assets/mail_kinds_guidelines.md`. Write `scripts/make_splits.py`,
+   standard library only, with tests on synthetic mail: about 1,500
+   messages from the importer's JSONL with a fixed seed, spread over the
+   years first; within the years Gmail categorised, at least 30 from each
+   category that has that many and all of any that has fewer. It splits
+   them into a pilot of 100, an eval set of 300 and a training pool of
+   about 1,000, all disjoint, each with the same spread, and the rest as
+   backlog.
+   Done when: both assets publish to the cluster, the script's tests pass,
+   and the splits of the real archive are published.
+4. **Choose the LLMs.** Between `gemini_agent`, `hf_llm_agent` and an
+   agent recipe of our own that runs a model on the cluster, none of
+   which is settled (see [facts.md](facts.md)). Read the data-use terms of
+   each service considered before any mail goes to it.
+   Done when: the choice and its reasons are in [design.md](design.md),
+   and the terms it rests on are checked in facts.md.
+5. **Pilot.** Label the 100 by hand, flagging every message you hesitate
+   on, with each chosen LLM as a separate annotator on the same task.
+   Settle the labels, descriptions and guidelines in the two assets from
+   the disagreements and flags (as helpdesk-routing's pilot does).
+   Done when: the scheme is settled, one LLM is chosen to draft the
+   training pool, and the bar the model has to reach is written down
+   before anything is scored.
+6. **Eval set.** Label the 300 blind, with no model or LLM in the loop. A
    week later, label 50 of them again blind.
    Done when: the eval set is labelled and the self-agreement figure is
    recorded.
-5. **Training pool.** The chosen LLM drafts labels; the person curates them
+7. **Training pool.** The chosen LLM drafts labels; the person curates them
    (support-insights' `curate` task).
    Done when: the pool is curated.
-6. **Train and score.** Train the text classifier, with a learning curve
-   to see whether more labels still help. Score the model, both LLMs and
-   Gmail's categories against the eval set, overall, per label, and on the
-   pre-2013 slice. Record time and cost per 1,000 messages for the model
+8. **Train and score.** Train the text classifier, with a learning curve
+   (`train --train-curve`) to see whether more labels still help. Score
+   the model and each LLM against the eval set, overall, per label, and on
+   the slice Gmail never categorised (mail from before late 2010). Score
+   Gmail's categories too, through the default scheme's mapping, as a
+   side comparison. Record time and cost per 1,000 messages for the model
    and each LLM.
    Done when: the scores and costs are in a results table, and the model
-   is judged against the bar from step 3.
-7. **Export and publish.** Export with `/ellf-template`, swap in synthetic
+   is judged against the bar from step 5.
+9. **Export and publish.** Export with `/ellf-template`, swap in synthetic
    sample mail, and fill the fields ellf-templates' AGENTS.md lists for
-   `templates.json`. Tags: Text Classification, LLM Distillation,
+   `templates.json`. The README says how to use your own categories (the
+   two assets and the `review` tasks' label lists) and that only the
+   default scheme is tested. Tags: Text Classification, LLM Distillation,
    Evaluation, Data Import & Export, spaCy, and the chosen LLM.
    Done when: this repo is public with the template and the write-up, and
    nothing in it comes from real mail.
-8. **Offer it to Explosion.** By their documented route for contributed
-   templates.
-   Done when: sent.
-9. **Use it in mailcellar.** Planned in mailcellar once step 6 says the
-   model is good enough: an optional extra, a command that stores each
-   message's kind and score, and a `kind` scope key for offload rules.
-   Done when: that plan exists in mailcellar.
+10. **Offer it to Explosion.** By their documented route for contributed
+    templates.
+    Done when: sent.
+11. **Use it in mailcellar.** Planned in mailcellar once step 8 says the
+    model is good enough: an optional extra, a command that stores each
+    message's kind and score, and a `kind` scope key for offload rules.
+    Done when: that plan exists in mailcellar.
 
 ## Done
 
@@ -55,5 +76,5 @@ In order. Each item says when it is done.
    Done when: all three inputs produce the same records for the same
    messages, and `ellf publish data` accepts the output.
    Done 2026-11-20: identical JSONL from all three on synthetic mail, and
-   `ellf publish data` took it. The Takeout and gyb label formats it reads
-   are not yet checked against real exports (see [facts.md](facts.md)).
+   `ellf publish data` took it. The gyb label format is checked on real
+   backups; Takeout's is not yet (see [facts.md](facts.md)).

@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-ellf-mail-triage: an Ellf template that sorts archived mail into kinds
-(`PERSONAL`, `TRANSACTIONAL`, `NOTIFICATION`, `BULK`, `LIST`) with a small
-spaCy text classifier, and measures it against LLMs, Gmail's categories and
-a person. Read [docs/design.md](docs/design.md) first; what to build next is
-in [docs/backlog.md](docs/backlog.md), in order.
+ellf-mail-triage: an Ellf template that sorts archived mail into categories
+the user defines in a label scheme (by default `PERSONAL`, `TRANSACTIONAL`,
+`NOTIFICATION`, `BULK`, `LIST`) with a small spaCy text classifier, and
+measures it against LLMs and a person. Read [docs/design.md](docs/design.md)
+first; what to build next is in [docs/backlog.md](docs/backlog.md), in order.
 
 ## Layout
 
@@ -32,8 +32,10 @@ uv run ruff format && uv run ruff check    # format, then lint; both must pass
   invented names). Real exports live outside the repo; scratch output goes
   to the scratchpad. Figures from real mail are counts only.
 - `assets/input/` holds synthetic mail only, with fictional senders.
-- No mail goes to a cloud LLM until the Gemini data-use question in
-  [docs/facts.md](docs/facts.md) is settled.
+- No mail goes to an LLM service (Gemini through `gemini_agent`, Hugging
+  Face Inference Providers through `hf_llm_agent`, or any other) until
+  that service's data-use question in [docs/facts.md](docs/facts.md) is
+  settled.
 - `scripts/` is standard library only: it runs on the host, outside Ellf.
 - Before relying on a behaviour of Ellf, a recipe or an LLM service, check
   [docs/facts.md](docs/facts.md). A new fact goes there with its source and
