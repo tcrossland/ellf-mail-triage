@@ -8,6 +8,15 @@ In order. Each item says when it is done.
    later, label 50 of them again blind.
    Done when: the eval set is labelled and the self-agreement figure is
    recorded.
+   Progress (2026-11-20):
+   - The archive was re-imported with the language guess (3 min 9 s) and
+     the splits redrawn: the same messages in every split. They are
+     published as version 1.2.0.
+   - Task `mail-eval` (dataset `mail_eval`) is ready on scheme 0.4.0. The
+     cards now hide the meta (`hide_meta` in `config/prodigy_mail.json`),
+     which the pilot showed, Gmail's category included, so the eval labels
+     are blind to Gmail.
+   - Left: the 300 labels, then 50 of them again a week later.
 7. **Training pool.** The local LLM drafts labels, with the instructions
    in `config/llm_instructions.txt`; the person curates every draft
    (support-insights' `curate` task), and the curating time is recorded.

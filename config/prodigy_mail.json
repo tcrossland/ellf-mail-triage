@@ -1,5 +1,6 @@
 {
   "show_flag": true,
+  "hide_meta": true,
   "custom_theme": {
     "cardMaxWidth": 1000
   },
