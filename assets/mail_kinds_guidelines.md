@@ -1,4 +1,4 @@
-# Mail kinds: annotation guidelines (v0.3)
+# Mail kinds: annotation guidelines (v0.4)
 
 Pick the **one kind** of each message. The kind is used to decide what to
 keep from an old mail archive: work, personal mail and your own records
@@ -44,6 +44,20 @@ Go down this list and take the first that fits:
 Automated mail from an official body is the hardest case: it is
 **ADMIN** when it records a decision or something you must do, and
 **AUTOMATED** when it is a routine reminder.
+
+Cases settled in the pilot:
+
+- A purchase or booking confirmation is **ADMIN**; later mail about
+  the same order (dispatched, out for delivery) is **AUTOMATED**.
+- Notices of new terms, privacy policies or fees sent to all customers
+  are **AUTOMATED**. One that comes as part of a dealing of your own,
+  such as a solicitor's at the start of your case, is **ADMIN**, and one
+  from your employer is **WORK**.
+- Activity on something you're involved in (an issue you commented on,
+  your pull request) is **AUTOMATED**; releases and discussions on a
+  project you only watch are **BULK**.
+- A confirmation of something you did that records no purchase or
+  decision (a sign-up, a form, a submission) is **AUTOMATED**.
 
 A `List-Unsubscribe` header says the message went out through list or
 campaign software. It points to **BULK**, but automated account mail can

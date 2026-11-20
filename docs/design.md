@@ -107,10 +107,16 @@ supported but not tested.
   equal: mail to keep given a kind that is dropped may be offloaded, while
   mail to drop given a kind that is kept only takes up space. So the bar
   the model has to reach names the costly mistakes and limits them, as
-  well as setting overall agreement; for the default scheme, `WORK`,
-  `PERSONAL` or `ADMIN` mail labelled `AUTOMATED` or `BULK`. With your own
-  scheme, you name the costly mistakes. The bar is written down in the
-  pilot, before anything is scored.
+  well as setting overall agreement. With your own scheme, you name the
+  costly mistakes; the bar is written down in the pilot, before anything
+  is scored. For the default scheme, measured on the eval set against the
+  person's labels: at most 2% of `WORK`, `PERSONAL` or `ADMIN` mail
+  labelled `AUTOMATED` or `BULK`, overall and in each language with at
+  least 50 eval messages; overall agreement of at least 85%, weighted by
+  period; and no language more than 10 points behind another. For scale,
+  in the pilot the person's first labels agreed with their reviewed ones
+  on 94 of 100, and the local LLM's on 77, with 5 of 86 messages to keep
+  given a dropped kind.
 - **Gmail's categories are an optional comparison**, not part of the
   headline. Where a scheme maps onto them, they are scored as one more
   annotator, at the coarser level, as llm-classifier-eval treats an LLM.
@@ -141,6 +147,14 @@ supported but not tested.
   leading one, and the drafts need more curating. Any OpenAI-compatible
   endpoint works, so a user who accepts a cloud service's terms can point
   the action at one.
+- **The LLM drafts; the person decides.** The pilot judged the local LLM
+  good enough to draft the training pool, not to label anything on its
+  own: the person checks every draft, which catches its errors, and the
+  time drafting saves is measured when the training pool is curated. Its
+  instructions are kept in `config/llm_instructions.txt`, generic for any
+  archive. They follow the guidelines' order and add one line against its
+  main error in the pilot, giving `WORK` to mail from a person that isn't
+  about the job.
 - **Costs are measured on one machine.** The write-up gives the time per
   1,000 messages for the small model and the local LLM, run on the same
   machine, the time training takes, and the person's hours labelling and

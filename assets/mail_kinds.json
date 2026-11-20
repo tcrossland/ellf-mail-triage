@@ -47,6 +47,7 @@
     "description": "Your own affairs with organisations, outside work: receipts, orders, bookings, bank and card statements, contracts, and dealings with tax and government, health, school, housing, insurance and utilities, including a person at a company answering your query or complaint. Keep it as a record.",
     "do_not_mark": [
       "routine automated mail about an account, such as a sign-in code, a shipping update or a reminder that a bill is ready (AUTOMATED)",
+      "a notice of new terms, a privacy policy or fees sent to all customers (AUTOMATED), unless it comes as part of a dealing of your own, such as a solicitor's at the start of your case",
       "offers and newsletters from a company you deal with (BULK)",
       "a quote, invoice or booking for your job (WORK)"
     ],
@@ -65,9 +66,10 @@
     ]
   },
   "AUTOMATED": {
-    "description": "Mail a system sends about your own account or activity: sign-in codes, password resets, security notices, shipping and delivery updates, reminders, someone commenting on something of yours, notices from work systems. Useful for a while, rarely worth keeping.",
+    "description": "Mail a system sends about your own account or activity: sign-in codes, password resets, security notices, shipping and delivery updates, reminders, confirmations of something you did that record no purchase or decision (a sign-up, a form, a submission), activity on things you're involved in (a reply to your comment, a review of your change), changes to a service you use or to its terms, privacy policy or fees, and notices from work systems. Useful for a while, rarely worth keeping.",
     "do_not_mark": [
       "a record of a payment, order or booking, or a decision about your affairs, such as a tax assessment or an insurance claim outcome (ADMIN)",
+      "a release or discussion on a project you only watch (BULK)",
       "the same campaign or newsletter sent to everyone (BULK)",
       "a person writing to you, even through a service's contact form (PERSONAL, WORK or ADMIN)"
     ],
@@ -86,9 +88,11 @@
     ]
   },
   "BULK": {
-    "description": "The same message sent to many people: newsletters, marketing and offers, announcements, and mailing lists or groups where members write to each other. Usually safe to drop.",
+    "description": "The same message sent to many people: newsletters, marketing and offers, announcements, mailing lists or groups where members write to each other, and notices about projects you only watch, such as a new release. Usually safe to drop.",
     "do_not_mark": [
       "a person writing to you or a small group you know (PERSONAL or WORK)",
+      "activity on something you're involved in, such as a reply to your comment (AUTOMATED)",
+      "a notice of new terms or a privacy policy from a service you use (AUTOMATED)",
       "automated mail about your own account, even with an unsubscribe link (AUTOMATED)",
       "a receipt or booking, even from a shop that also sends offers (ADMIN)"
     ],

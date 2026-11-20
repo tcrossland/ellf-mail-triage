@@ -2,56 +2,15 @@
 
 In order. Each item says when it is done.
 
-5. **Pilot.** Copy `llm_to_dataset` from llm-classifier-eval into
-   `recipes/`, change it to ask for no thinking (see [facts.md](facts.md)),
-   and publish it. Label the 100 by hand, flagging every message you
-   hesitate on, and save the local LLM's answers on the same messages as a
-   separate annotator. Settle the labels, descriptions and guidelines in
-   the two assets from the disagreements and flags (as helpdesk-routing's
-   pilot does).
-   Done when: the scheme is settled, the local LLM is judged good enough
-   to draft the training pool (or a bigger local model is), and the bar
-   the model has to reach is written down before anything is scored: per
-   label, with a limit on the costly mistakes (mail to keep given a kind
-   that is dropped).
-   Progress (2026-11-20):
-   - `recipes/mail_recipes` is published.
-   - The pilot task `mail-pilot` is ready, using
-     `config/prodigy_mail.json`.
-   - Qwen3 14B's answers on the 100 are in `mail_pilot_llm` as annotator
-     `qwen3-14b`. It took 7 min 15 s, about 4.3 s a message.
-   - Work mail turned up from the first message, so scheme 0.2.0 adds
-     `WORK` (a person writing about your job) and narrows `PERSONAL` to
-     life outside work.
-   - The pilot restarted as task `mail-pilot-2` (dataset `mail_pilot_2`).
-     The 0.1.0 task is stopped.
-   - You labelled the 100 in 8.9 min, about 5 s a message, with none
-     flagged. WORK is the largest kind (39), and there is no LIST.
-   - Over half the pilot is in one language, and the kind goes with the
-     language, so results are now given by language (see design.md) and
-     the importer guesses each message's language.
-   - On 0.2.0 the LLM agreed with you on 54 of 100 (59% and 51% in the two
-     main languages), with 3 costly mistakes. It gave TRANSACTIONAL 28
-     times to your 10, 13 of them on mail you called WORK.
-   - A profile of the received archive (counts only) showed mostly
-     correspondence with people at organisations, 5% with List-Unsubscribe
-     and about 2% list mail. So scheme 0.3.0 has five kinds: WORK,
-     PERSONAL, ADMIN (your own records and affairs, absorbing
-     TRANSACTIONAL), AUTOMATED (was NOTIFICATION) and BULK (absorbing
-     LIST). A job's paperwork is WORK.
-   - The pilot restarts as task `mail-pilot-3` (dataset `mail_pilot_3`);
-     the 0.2.0 task is stopped.
-   - Left: your labels on 0.3.0, the LLM's answers on it (into
-     `mail_pilot_llm_3`), its agreement with you overall and by language,
-     then settling the scheme and writing down the bar.
 6. **Eval set.** Re-import and republish the splits first, so their meta
    has the language guess; the same archive and seed give the same
    splits. Label the 300 blind, with no model or LLM in the loop. A week
    later, label 50 of them again blind.
    Done when: the eval set is labelled and the self-agreement figure is
    recorded.
-7. **Training pool.** The local LLM drafts labels; the person curates them
-   (support-insights' `curate` task).
+7. **Training pool.** The local LLM drafts labels, with the instructions
+   in `config/llm_instructions.txt`; the person curates every draft
+   (support-insights' `curate` task), and the curating time is recorded.
    Done when: the pool is curated.
 8. **Train and score.** Train the text classifier, with a learning curve
    (`train --train-curve`) to see whether more labels still help, from a
@@ -129,3 +88,26 @@ In order. Each item says when it is done.
    Ollama, called by llm-classifier-eval's `llm_to_dataset` action rather
    than an agent of our own; no cloud LLM, after reading Gemini's and
    Hugging Face's terms.
+5. **Pilot.** Copy `llm_to_dataset` from llm-classifier-eval into
+   `recipes/`, change it to ask for no thinking (see [facts.md](facts.md)),
+   and publish it. Label the 100 by hand, flagging every message you
+   hesitate on, and save the local LLM's answers on the same messages as a
+   separate annotator. Settle the labels, descriptions and guidelines in
+   the two assets from the disagreements and flags (as helpdesk-routing's
+   pilot does).
+   Done when: the scheme is settled, the local LLM is judged good enough
+   to draft the training pool (or a bigger local model is), and the bar
+   the model has to reach is written down before anything is scored: per
+   label, with a limit on the costly mistakes (mail to keep given a kind
+   that is dropped).
+   Done 2026-11-20: `recipes/mail_recipes` published; scheme 0.4.0 with
+   five kinds (WORK, PERSONAL, ADMIN, AUTOMATED, BULK), settled over three
+   rounds of the pilot: 0.1.0 had no kind for work mail, and 0.2.0 split
+   records and dealings across three kinds while lists were rare. On 0.3.0
+   the person labelled the 100 in 8.5 min and reviewed the 25
+   disagreements in 5.2 min; their first labels agree with the reviewed
+   ones on 94, the local LLM's on 77 (6 min 50 s for 100), with 5 costly
+   mistakes. The LLM drafts and the person decides; its instructions are
+   in `config/llm_instructions.txt`. The bar is in [design.md](design.md).
+   Over half the pilot is in one language and the kind went with it, so
+   results are given by language and the importer guesses it.
