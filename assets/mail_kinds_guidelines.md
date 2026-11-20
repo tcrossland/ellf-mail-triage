@@ -1,4 +1,4 @@
-# Mail kinds: annotation guidelines (v0.1)
+# Mail kinds: annotation guidelines (v0.2)
 
 Pick the **one kind** of each message. The kind is used to decide what to
 keep from an old mail archive: correspondence and records are kept,
@@ -14,7 +14,10 @@ from what is shown; don't guess at what the rest of the message says.
 
 Hover a label to see its full definition, what not to mark and examples.
 
-- **PERSONAL**: written by a person to you or a small group you belong to.
+- **PERSONAL**: written by a person to you or a small group you belong to,
+  about your life outside work.
+- **WORK**: written by a person to you or a small group you belong to,
+  about your job.
 - **TRANSACTIONAL**: a record of something you bought, booked, paid or
   signed.
 - **NOTIFICATION**: automated mail about your own account or activity.
@@ -27,7 +30,9 @@ Go down this list and take the first that fits:
 
 1. A record of a transaction is **TRANSACTIONAL**, whoever sent it and
    whatever else it says.
-2. A person writing to you or a small group is **PERSONAL**.
+2. A person writing to you or a small group is **WORK** when it is about
+   your job, and **PERSONAL** otherwise. A colleague writing about the
+   weekend is PERSONAL; a friend asking about a job opening is WORK.
 3. Members of a list writing to each other is **LIST**.
 4. Automated mail about your own account or activity is **NOTIFICATION**.
 5. Anything sent the same to many people is **BULK**.

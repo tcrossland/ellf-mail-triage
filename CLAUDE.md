@@ -1,10 +1,11 @@
 # CLAUDE.md
 
 ellf-mail-triage: an Ellf template that sorts archived mail into categories
-the user defines in a label scheme (by default `PERSONAL`, `TRANSACTIONAL`,
-`NOTIFICATION`, `BULK`, `LIST`) with a small spaCy text classifier, and
-measures it against LLMs and a person. Read [docs/design.md](docs/design.md)
-first; what to build next is in [docs/backlog.md](docs/backlog.md), in order.
+the user defines in a label scheme (by default `PERSONAL`, `WORK`,
+`TRANSACTIONAL`, `NOTIFICATION`, `BULK`, `LIST`) with a small spaCy text
+classifier, and measures it against LLMs and a person. Read
+[docs/design.md](docs/design.md) first; what to build next is in
+[docs/backlog.md](docs/backlog.md), in order.
 
 ## Layout
 

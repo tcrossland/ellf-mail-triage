@@ -1,7 +1,8 @@
 {
   "PERSONAL": {
-    "description": "Written by a person to you or to a small group you belong to, whether friends, family or work: questions, replies, plans, news, a person at a company answering you about your own case. Keep it as correspondence.",
+    "description": "Written by a person to you or to a small group you belong to, about your life outside work: friends and family, questions, replies, plans, news, a person at a company answering you about your own case as a customer. Keep it as correspondence.",
     "do_not_mark": [
+      "a colleague, client or recruiter writing to you about your job (WORK)",
       "a newsletter or campaign written in a person's name but sent to many people (BULK)",
       "a post to a mailing list or group of people who mostly don't know each other (LIST)",
       "automated mail signed with a person's name, such as an account manager's welcome message (NOTIFICATION or BULK)",
@@ -18,6 +19,29 @@
       },
       {
         "text": "From: Example Weekly (example.net)\nSubject: Ten things I learnt this year\nList-Unsubscribe: yes\n\nHello friends, it's been a busy year and I wanted to share a few lessons with all of you."
+      }
+    ]
+  },
+  "WORK": {
+    "description": "Written by a person to you or to a small group you belong to, about your job: colleagues, managers, clients, suppliers, recruiters, meeting arrangements, replies in a work thread. Keep it as correspondence, unless your rules say otherwise for an old employer's mail.",
+    "do_not_mark": [
+      "automated mail from a work system, such as a ticket update, build alert or calendar notice (NOTIFICATION)",
+      "a company-wide announcement or newsletter sent to everyone (BULK)",
+      "an expense receipt, invoice or travel booking for work (TRANSACTIONAL)",
+      "a post to a professional mailing list or discussion group (LIST)",
+      "a person writing about your life outside work, even a colleague (PERSONAL)"
+    ],
+    "examples": [
+      {
+        "text": "From: Priya Nair (example.com)\nSubject: Re: Draft budget for Q3\nList-Unsubscribe: no\n\nThanks, I've added the travel line and moved the launch costs to August. Can you check the totals before Thursday's meeting? Priya",
+        "label": "WORK"
+      },
+      {
+        "text": "From: Chidi Eze (recruit.example.org)\nSubject: Senior analyst role\nList-Unsubscribe: no\n\nHello, I came across your profile and wondered whether you'd be open to a chat about a senior analyst role at a client of ours. Are you free next week? Chidi",
+        "label": "WORK"
+      },
+      {
+        "text": "From: Example Tracker (tracker.example.net)\nSubject: [OPS-1024] Status changed to Done\nList-Unsubscribe: no\n\nThe issue OPS-1024 assigned to you was moved from In review to Done by the workflow."
       }
     ]
   },
@@ -47,7 +71,7 @@
     "do_not_mark": [
       "a record of a payment, order or booking (TRANSACTIONAL)",
       "the same campaign or newsletter sent to everyone (BULK)",
-      "a person writing to you, even through a service's contact form (PERSONAL)"
+      "a person writing to you, even through a service's contact form (PERSONAL or WORK)"
     ],
     "examples": [
       {
@@ -88,7 +112,7 @@
     "description": "A message to a mailing list or group where members write to each other: discussion lists, Google Groups, a club's, class's or project's list, and digests of such a list.",
     "do_not_mark": [
       "a one-way newsletter, even one that comes through list software (BULK)",
-      "a thread among a few people you know, sent to them directly (PERSONAL)",
+      "a thread among a few people you know, sent to them directly (PERSONAL or WORK)",
       "notifications from a tool such as an issue tracker about something you follow (NOTIFICATION)"
     ],
     "examples": [

@@ -74,7 +74,10 @@ supported but not tested.
 - **The default scheme sorts by what to keep**, for mailcellar. It follows
   Gmail's categories where they serve retention and splits Updates, which
   mixes mail to keep with mail to drop:
-  - `PERSONAL`: written by a person to you or a small group.
+  - `PERSONAL`: written by a person to you or a small group, about your
+    life outside work.
+  - `WORK`: written by a person to you or a small group, about your job.
+    Added in the pilot, where work mail turned up from the first message.
   - `TRANSACTIONAL`: receipts, invoices, orders, bookings, statements. Kept
     as records.
   - `NOTIFICATION`: automated alerts, shipping updates, social network
@@ -88,21 +91,21 @@ supported but not tested.
   account are out of scope: a predicted label can't know about them, so
   those rules have to check them. The template's README says so.
 - **The bar is set per label, around the costly mistake.** Errors aren't
-  equal: mail to keep given a kind that is dropped may be offloaded,
-  while mail to drop given a kind that is kept only takes up space. So
-  the bar the model has to reach names the costly mistakes and limits
-  them, as well as setting overall agreement; for the default scheme,
-  `PERSONAL` or `TRANSACTIONAL` mail labelled `NOTIFICATION` or `BULK`.
-  With your own scheme, you name the costly mistakes. The bar is written
-  down in the pilot, before anything is scored.
+  equal: mail to keep given a kind that is dropped may be offloaded, while
+  mail to drop given a kind that is kept only takes up space. So the bar
+  the model has to reach names the costly mistakes and limits them, as
+  well as setting overall agreement; for the default scheme, `PERSONAL`,
+  `WORK` or `TRANSACTIONAL` mail labelled `NOTIFICATION` or `BULK`. With
+  your own scheme, you name the costly mistakes. The bar is written down
+  in the pilot, before anything is scored.
 - **Gmail's categories are an optional comparison**, not part of the
   headline. Where a scheme maps onto them, they are scored as one more
   annotator, at the coarser level, as llm-classifier-eval treats an LLM.
-  For the default scheme the mapping is Primary to `PERSONAL`, Promotions
-  to `BULK`, Forums to `LIST`, Social to `NOTIFICATION`, and Updates to
-  `TRANSACTIONAL` or `NOTIFICATION`; in the archive checked this mostly
-  measures Primary against Updates. It is scored only on the messages
-  that have a category.
+  For the default scheme the mapping is Primary to `PERSONAL` or `WORK`,
+  Promotions to `BULK`, Forums to `LIST`, Social to `NOTIFICATION`, and
+  Updates to `TRANSACTIONAL` or `NOTIFICATION`; in the archive checked
+  this mostly measures Primary against Updates. It is scored only on the
+  messages that have a category.
 - **Text the model sees**: the sender's name and domain, the subject,
   whether there's a `List-Unsubscribe` header, then the first part of the
   visible body text. Whether the header lines help is measured, not
