@@ -149,7 +149,7 @@ def test_classify_sends_the_details_before_the_text():
     assert "    Yes, if it rains." in prompt
 
 
-def test_the_action_passes_label_details_to_classify(tmp_path, monkeypatch):
+def test_the_action_passes_label_details_to_classify(database: Database, tmp_path, monkeypatch):
     calls: list[bool] = []
 
     def fake(eg, scheme, exclusive, *, details=False, **kwargs):

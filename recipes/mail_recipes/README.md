@@ -1,7 +1,12 @@
 # mail_recipes
 
-The custom action of the ellf-mail-triage template: `llm_to_dataset`, copied
-from the [llm-classifier-eval](https://github.com/explosion/ellf-templates)
+The custom actions of the ellf-mail-triage template:
+
+- `llm_to_dataset` saves an LLM's answers as an annotator's.
+- `model_to_dataset` saves a trained spaCy model's answers the same way.
+
+`llm_to_dataset` is copied from the
+[llm-classifier-eval](https://github.com/explosion/ellf-templates)
 template's `llm_recipes` (MIT, Copyright (c) 2026 ExplosionAI GmbH; see
 [LICENSE](LICENSE)), with these changes:
 
@@ -62,11 +67,38 @@ versions of an asset share a name, a name doesn't say which version is used.
 `ellf actions create` starts the action unless given `--no-start`; don't run
 `ellf actions start` after it, which starts a second copy.
 
+## `model_to_dataset`
+
+Saves a trained text classifier's answers on an input asset of texts to a
+dataset, credited to their own session (`model` by default), as
+`llm_to_dataset` does for an LLM. The `train` action reports only overall
+scores; with the answers saved per text, the review, the dashboard and
+`scripts/score.py` compare the model with the LLM and people on each
+message. Each answer's score, the probability of the model's top label,
+goes in the example's `meta.score`.
+
+```bash
+ellf actions create model_to_dataset --name mail-eval-model \
+  --input <eval asset ID> --model <model asset ID> \
+  --label-scheme <scheme asset ID> --output mail_eval_model --session "spaCy"
+```
+
+The model is the asset the `train` action registers. A pipeline with
+`textcat` gives one label per text, and one with only `textcat_multilabel`
+every label scored 0.5 or above. The examples are built with the scheme's
+labels, as the annotation task builds them, and the model's labels must
+all be among them. Answers are saved every `--batch-size` texts (default
+1,000), and a rerun skips texts that already have the session's answer.
+The log ends with the time per 1,000 texts.
+
 ## Publishing
 
 ```bash
 ellf publish code recipes/mail_recipes
 ```
+
+`ellf publish code` runs `python`, so the CLI's environment has to be on
+the `PATH` (activated), not only its `ellf` called by its full path.
 
 The version comes from `mail_recipes/about.py`: bump it there for each change.
 

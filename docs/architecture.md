@@ -102,7 +102,7 @@ flowchart TD
     trl --> fit["Action: train<br/>blank en or xx pipeline"]
     evl --> fit
     fit --> model(["Model"])
-    model --> apply["Model answers on eval and pilot<br/>(action still to write)"] --> md(["mail_eval_model"])
+    model --> apply["model_to_dataset<br/>on eval and pilot"] --> md(["mail_eval_model"])
 
     reviewed & d2 & md --> export --> score["score.py<br/>by label, period and language,<br/>with intervals and the bar"]
     archive["archive.jsonl"] -- "period shares" --> score

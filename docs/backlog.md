@@ -2,26 +2,6 @@
 
 In order. Each item says when it is done.
 
-8. **Train and score.**
-   - **Train** the text classifier from a blank `en` pipeline and from a
-     blank `xx` one, with a learning curve (`train --train-curve`) to see
-     whether more labels still help, and keep the better.
-   - **Apply the model:** save its answer on each eval and pilot message
-     as an annotator of its own, as `llm_to_dataset` does for the LLM.
-     `train` reports only overall scores, and of the cluster's recipes only
-     the GPU package's `apply_curated_transformer` applies a model (not
-     read), so this probably needs an action of our own.
-   - **Score** with `scripts/score.py` from dataset exports: the model
-     against the LLM on the eval set, and the model and the LLM against
-     the person's reviewed pilot labels, overall, per label, per period
-     and per language, with intervals. Score Gmail's categories too,
-     through the default scheme's mapping, as a side comparison.
-   - **Costs:** the time per 1,000 messages for the model and the local
-     LLM on the same machine, the training time, the LLM's time in steps 6
-     and 7, and the person's hours in step 5.
-
-   Done when: the scores and costs are in [results.md](results.md), and
-   the model is judged against the bar in [design.md](design.md).
 9. **Export and publish.** Export with `/ellf-template`, swap in synthetic
    sample mail, and fill the fields ellf-templates' AGENTS.md lists for
    `templates.json`. The README says how to use your own categories (the
@@ -128,3 +108,29 @@ In order. Each item says when it is done.
    Qwen3 14B, every one with a usable answer, in about 70 minutes of
    machine time over two runs. Qwen3 8B was tried on the pilot first and
    ruled out (see [results.md](results.md)).
+8. **Train and score.**
+   - **Train** the text classifier from a blank `en` pipeline and from a
+     blank `xx` one, with a learning curve (`train --train-curve`) to see
+     whether more labels still help, and keep the better.
+   - **Apply the model:** save its answer on each eval and pilot message
+     as an annotator of its own, as `llm_to_dataset` does for the LLM.
+     `train` reports only overall scores, and of the cluster's recipes only
+     the GPU package's `apply_curated_transformer` applies a model (not
+     read), so this probably needs an action of our own.
+   - **Score** with `scripts/score.py` from dataset exports: the model
+     against the LLM on the eval set, and the model and the LLM against
+     the person's reviewed pilot labels, overall, per label, per period
+     and per language, with intervals. Score Gmail's categories too,
+     through the default scheme's mapping, as a side comparison.
+   - **Costs:** the time per 1,000 messages for the model and the local
+     LLM on the same machine, the training time, the LLM's time in steps 6
+     and 7, and the person's hours in step 5.
+
+   Done when: the scores and costs are in [results.md](results.md), and
+   the model is judged against the bar in [design.md](design.md).
+   Done 2026-11-20: spaCy's text classifier from blank `en` and `xx`
+   pipelines, about 2 minutes to train and about 1 second per 1,000
+   messages, applied by `model_to_dataset` in `mail_recipes` 0.4.0. `xx`
+   agrees with the person on 79 of 100 with 4 of 86 costly, as the LLM
+   does (79, 5), and fails the bar as the LLM does. The learning curve
+   still rises. Whether the header lines help is not yet measured.

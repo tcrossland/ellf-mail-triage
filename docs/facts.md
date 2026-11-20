@@ -125,8 +125,24 @@ Anything not checked is **unverified**.
   answers.
   Source: `ellf tasks create review --help`.
 - `train` takes its labels from the answers (`--textcat.train` for
-  exclusive labels) and can draw a learning curve (`--train-curve`).
+  exclusive labels) and can draw a learning curve (`--train-curve`, with
+  `--train-curve.n-samples` points; the default 1 draws none worth
+  having). With `--textcat.eval` it evaluates on those datasets instead
+  of holding back `--eval-split` of the training data.
   Source: `ellf actions create train --help`.
+- `train` registers a Model asset (`--output.name`, at
+  `{__nfs__}/models/<name>/<version>`) and a Results asset, and uploads
+  `model-best`: the checkpoint that scored best on the evaluation data.
+  So the evaluation data choose the model, and scores on them flatter it
+  a little. `--output.skip` registers neither. On 998 messages from a
+  blank pipeline it trained in about 2 minutes on the Lima VM's 4 CPUs.
+  Source: `ellf_recipes/recipes/train.py` in ellf-recipes on the cluster;
+  tried 2026-11-20.
+- A recipe takes a trained model as a parameter typed `Model` from
+  `ellf_recipes_sdk`, and `.load()` returns the spaCy pipeline, from a
+  directory or a packaged wheel. The CLI takes the model asset's ID.
+  Source: `ellf_recipes_sdk/sdk/assets.py`; `model_to_dataset` in
+  `mail_recipes` 0.4.0, tried 2026-11-20.
 - `ellf actions create` starts the action unless given `--no-start`.
   Running `ellf actions start` after it starts a second execution of the
   same action.
@@ -179,6 +195,10 @@ Anything not checked is **unverified**.
   `AttributeError`. They pass with the pre-release `prodigy==2.0.0a18`
   (`pip install --pre`).
   Source: tried with the github-docs-issues venv, Python 3.12.
+- A recipe test that saves examples without the tests' `database`
+  fixture writes to Prodigy's default database, `~/.prodigy/prodigy.db`,
+  and a rerun then finds its own earlier answers there.
+  Source: tried 2026-11-20 with `mail_recipes`' tests.
 
 ## LLMs and Ollama
 
