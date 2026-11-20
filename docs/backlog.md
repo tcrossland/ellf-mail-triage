@@ -2,11 +2,6 @@
 
 In order. Each item says when it is done.
 
-1. **Learn the tools.** Install Ellf on the Solo plan and run the
-   github-docs-issues template end to end; it is the closest single-label
-   text classification template.
-   Done when: that template has trained a model here, and anything learnt
-   about Ellf that later steps rely on is in [facts.md](facts.md).
 2. **Importer.** `scripts/mail_to_jsonl.py`, standard library only: mbox,
    a folder of `.eml` files, or a Got Your Back backup, to JSONL (`text`,
    `meta`), with tests on synthetic mail.
@@ -50,3 +45,12 @@ In order. Each item says when it is done.
    Done when: that plan exists in mailcellar.
 
 ## Done
+
+1. **Learn the tools.** Install Ellf on the Solo plan and run the
+   github-docs-issues template end to end; it is the closest single-label
+   text classification template.
+   Done when: that template has trained a model here, and anything learnt
+   about Ellf that later steps rely on is in [facts.md](facts.md).
+   Done 2026-11-20: a local K3s cluster in a Lima VM; 610 issues answered
+   (179 accept, 378 reject, 53 ignore) by Claude rather than a person, as a
+   tools run; the model scored ROC AUC 0.91 and F 78.7 on 20% held back.
