@@ -381,3 +381,30 @@ def test_main_writes_jsonl(sources, tmp_path, capsys):
     assert all(set(line) == {"text", "meta"} for line in lines)
     assert sum(line["meta"]["sent"] for line in lines) == 1
     assert "wrote 5" in capsys.readouterr().err
+
+
+def test_a_long_html_body_is_parsed_only_as_far_as_needed():
+    row = (
+        "<tr><td>Offer   number {i}</td>\n"
+        "<td><a href='https://example.com/{i}'>see  it</a></td></tr>"
+    )
+    html = (
+        "<html><head><style>td {{}}</style></head><body><table>"
+        + "".join(row.format(i=i) for i in range(5000))
+        + "</table></body></html>"
+    )
+    full = m2j._SPACE.sub(" ", m2j.html_text(html)).strip()
+    part = m2j._SPACE.sub(" ", m2j.html_text(html, enough=1000)).strip()
+    assert len(part) < len(full) / 10
+    assert part[:1000] == full[:1000]
+
+
+@pytest.mark.parametrize("body_chars", [5, 37, 1000, 20000])  # 20000 crosses a chunk
+def test_the_body_is_the_same_whether_or_not_parsing_stops_early(body_chars):
+    words = " ".join(f"longword{i}" for i in range(3000))  # one run of text across chunks
+    html = f"<p>{words}</p>" + " ".join(f"word{i} <b>bold</b>\n\n" for i in range(4000))
+    msg = _message("Shop <news@example.com>", "Deals", "Mon, 1 Jun 2020 10:00:00 +0000", html=html)
+    assert (
+        m2j.visible_body(msg, body_chars)[:body_chars].rstrip()
+        == m2j.visible_body(msg)[:body_chars].rstrip()
+    )

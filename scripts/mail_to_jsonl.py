@@ -228,9 +228,26 @@ class _TextOfHtml(HTMLParser):
             self.parts.append(data)
 
 
-def html_text(html: str) -> str:
+_HTML_CHUNK = 8192
+
+
+def html_text(html: str, enough: int | None = None) -> str:
+    """The visible text of an HTML document, words separated by spaces.
+
+    With `enough`, parsing stops once the text, with its spaces collapsed,
+    is longer than that; a prefix of that length is the same as when the
+    whole document is parsed, and big newsletters are parsed only in part.
+    """
     parser = _TextOfHtml()
-    parser.feed(html)
+    start = 0
+    while start < len(html):
+        # Cut just before a tag, so no run of text is split between two parts
+        end = html.find("<", start + _HTML_CHUNK) if enough is not None else -1
+        end = len(html) if end == -1 else end
+        parser.feed(html[start:end])
+        start = end
+        if enough is not None and len(_SPACE.sub(" ", " ".join(parser.parts)).strip()) > enough + 1:
+            return " ".join(parser.parts)
     parser.close()
     return " ".join(parser.parts)
 
@@ -243,14 +260,18 @@ def _part_text(part: EmailMessage) -> str:
         return payload.decode("utf-8", errors="replace")
 
 
-def visible_body(msg: EmailMessage) -> str:
-    """The plain-text body, or the text of the HTML body when there is none, on one line."""
+def visible_body(msg: EmailMessage, enough: int | None = None) -> str:
+    """The plain-text body, or the text of the HTML body when there is none, on one line.
+
+    With `enough`, an HTML body is parsed only until it has more than that
+    many characters of text (see `html_text`).
+    """
     part = msg.get_body(preferencelist=("plain", "html"))
     if part is None:
         return ""
     text = _part_text(part)
     if part.get_content_subtype() == "html":
-        text = html_text(text)
+        text = html_text(text, enough)
     return _SPACE.sub(" ", text).strip()
 
 
@@ -317,7 +338,7 @@ def to_record(
     name, domain = sender(msg)
     subject = _header(msg, "Subject")
     unsubscribe = bool(_header(msg, "List-Unsubscribe"))
-    body = visible_body(msg)[:body_chars].rstrip()
+    body = visible_body(msg, body_chars)[:body_chars].rstrip()
     date = utc_date(msg)
     fallback = "\x00".join([date.isoformat() if date else "", name, domain or "", subject, body])
     return Record(
