@@ -25,8 +25,8 @@ is **unverified**.
 | How a trained model leaves the cluster. The docs list `ellf files cp` and `ellf export`; `hf_model_push` is not read. | ellf.ai/docs/assets-files, ellf.ai/docs/cli | **unverified** |
 | Whether a task can start on a dataset that already holds answers, for Gmail's categories as an annotator. `db_actions` can load them into a dataset (above); llm-classifier-eval may do the rest with an action. | | **unverified** |
 | Gmail has no categories on mail that arrived before its tabs launched in 2013; it did not go back and categorise older mail. The pre-2013 comparison rests on this. | | **unverified** |
-| A Google Takeout mbox gives each message's Gmail category, in its `X-Gmail-Labels` header. | | **unverified** |
-| A Got Your Back backup records each message's Gmail category in `msg-db.sqlite`. | | **unverified** |
+| A Google Takeout mbox gives each message's Gmail category, in its `X-Gmail-Labels` header: comma-separated labels, a category named like `Category Promotions`, chats labelled `Chat`. The importer accepts this and the `CATEGORY_PROMOTIONS` form. | Third-party guides to Takeout mbox files; no real export checked | **unverified** |
+| A Got Your Back backup (db_version 6) keeps each message's labels in the `labels` table of `msg-db.sqlite`, system labels by Gmail ID, so a category is `CATEGORY_PROMOTIONS` and so on; messages are `<year>/<month>/<day>/<gmail_id>.eml`, and chats aren't backed up. | mailcellar's `backup/gyb.py`, from gyb 1.97's code; no real backup checked | **unverified** |
 | Whether Google may use what is sent to the Gemini API, and whether that differs between the free and paid tiers. | | **unverified** |
 | spaCy runs on Python 3.14 (matters for use in mailcellar, which requires it). | | **unverified** |
 | Ellf's terms forbid using it "to develop competing products"; read in full before the mailcellar step. | | **unverified** |

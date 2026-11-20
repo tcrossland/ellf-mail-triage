@@ -12,8 +12,10 @@ on mail older than Gmail's categories? It scores the model against a cloud
 LLM, a local LLM, Gmail's own categories and the person who labelled the
 evaluation set.
 
-**Status:** nothing built yet. [docs/design.md](docs/design.md) says how it
-will work and [docs/backlog.md](docs/backlog.md) what comes next.
+**Status:** the importer is built: `scripts/mail_to_jsonl.py` turns an mbox,
+a folder of `.eml` files or a Got Your Back backup into JSONL for Ellf.
+[docs/design.md](docs/design.md) says how the rest will work and
+[docs/backlog.md](docs/backlog.md) what comes next.
 
 ## Privacy
 

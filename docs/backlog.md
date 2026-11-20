@@ -2,11 +2,6 @@
 
 In order. Each item says when it is done.
 
-2. **Importer.** `scripts/mail_to_jsonl.py`, standard library only: mbox,
-   a folder of `.eml` files, or a Got Your Back backup, to JSONL (`text`,
-   `meta`), with tests on synthetic mail.
-   Done when: all three inputs produce the same records for the same
-   messages, and `ellf publish data` accepts the output.
 3. **Sample and pilot.** Export about 1,500 messages, spread over the
    years and over Gmail's categories, with a fixed seed: a pilot of 100,
    an eval set of 300 and a training pool of about 1,000, all disjoint,
@@ -54,3 +49,11 @@ In order. Each item says when it is done.
    Done 2026-11-20: a local K3s cluster in a Lima VM; 610 issues answered
    (179 accept, 378 reject, 53 ignore) by Claude rather than a person, as a
    tools run; the model scored ROC AUC 0.91 and F 78.7 on 20% held back.
+2. **Importer.** `scripts/mail_to_jsonl.py`, standard library only: mbox,
+   a folder of `.eml` files, or a Got Your Back backup, to JSONL (`text`,
+   `meta`), with tests on synthetic mail.
+   Done when: all three inputs produce the same records for the same
+   messages, and `ellf publish data` accepts the output.
+   Done 2026-11-20: identical JSONL from all three on synthetic mail, and
+   `ellf publish data` took it. The Takeout and gyb label formats it reads
+   are not yet checked against real exports (see [facts.md](facts.md)).
