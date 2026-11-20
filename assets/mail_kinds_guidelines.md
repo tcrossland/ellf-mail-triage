@@ -1,4 +1,4 @@
-# Mail kinds: annotation guidelines (v0.4)
+# Mail kinds: annotation guidelines
 
 Pick the **one kind** of each message. The kind is used to decide what to
 keep from an old mail archive: work, personal mail and your own records
@@ -45,7 +45,7 @@ Automated mail from an official body is the hardest case: it is
 **ADMIN** when it records a decision or something you must do, and
 **AUTOMATED** when it is a routine reminder.
 
-Cases settled in the pilot:
+Common cases:
 
 - A purchase or booking confirmation is **ADMIN**; later mail about
   the same order (dispatched, out for delivery) is **AUTOMATED**.

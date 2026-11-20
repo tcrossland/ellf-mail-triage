@@ -1,190 +1,157 @@
 # Design
 
+What the template does and why each part is as it is. What it has found
+so far is in [results.md](results.md); the facts the design relies on,
+with sources, are in [facts.md](facts.md).
+
 ## Why
 
-People sort an archive for their own reasons: what to keep, which client
-or project a message belongs to, what still needs a reply. Gmail offers
-one fixed set of categories, and in a real archive they say little: in one
-Gmail account, Primary and Updates hold 99% of categorised mail,
-Promotions 0.3% and Social almost none (see [facts.md](facts.md)). They
-are also missing from older mail and from mail that came from another
-provider. An LLM can sort mail into any categories, but each message takes
-a second or more of a large model's time, on a paid service or on your own
-hardware, and a cloud LLM sees the mail. A small classifier trained on the
-archive itself, on categories its owner chose, should sort every message,
-old mail included, far faster on the same machine, without sending it
-anywhere. What it costs instead is labelling: a person's hours in the
-pilot, the eval set and the training pool. Whether that trade pays is
-measured, not assumed.
+Gmail's categories say little about an old archive: in one account,
+Primary and Updates hold 99% of categorised mail, and mail from before
+late 2010 or from other providers has none. An LLM can sort into any
+categories, but slowly, and a cloud LLM sees the mail. A small classifier
+trained on the archive itself runs fast and locally; what it costs is
+labels. The template measures whether that trade pays.
 
 [mailcellar](https://github.com/mailcellar/mailcellar), which offloads old
-mail out of Gmail by rule, is the first intended user: a `kind` it could
-filter on. Its scheme is the template's default and worked example.
+mail out of Gmail by rule, is the first intended user: it could filter on
+a message's kind. Its scheme is the template's default and worked example.
 
-[Ellf](https://ellf.ai), from Explosion (spaCy, Prodigy), fits: it plugs into
-Claude Code, runs annotation and training on a cluster on your own machine
-(the free Solo plan; on a Mac, in a Linux VM), and is built around
-replacing LLM calls with small private models. None of the public templates
-in [explosion/ellf-templates](https://github.com/explosion/ellf-templates)
+[Ellf](https://ellf.ai), from Explosion (spaCy, Prodigy), fits. It plugs
+into Claude Code, runs annotation and training on a cluster on your own
+machine (the free Solo plan; on a Mac, in a Linux VM), and is built around
+replacing LLM calls with small private models. None of the public
+templates in [explosion/ellf-templates](https://github.com/explosion/ellf-templates)
 is about mail.
 
 ## What the template does
 
-Sorts the messages in a mail archive into categories you define, one per
-message, using a small spaCy text classifier trained on labels that an LLM
-drafts and a person settles, and measures it against the LLM and against
-the person.
+It sorts the messages in a mail archive into categories you define, one
+per message, with a small spaCy text classifier trained on a local LLM's
+labels. It measures the classifier against the LLM, and against a person
+on the pilot.
 
-The question it answers, and the write-up's headline: on your own archive
-and your own categories, how close does a small model that runs locally
-get to an LLM, and what does each cost: machine time per 1,000 messages,
-and the person's hours the small model takes to train? The write-up
+The headline question: on your own archive and categories, how close does
+a small local model get to an LLM, and what does each cost? Cost here is
+machine time per 1,000 messages and the person's hours. The write-up
 answers it for the default scheme on one archive; other schemes are
 supported but not tested.
 
 ## Decisions
 
-- **The categories are an input**, in two assets, as helpdesk-routing
-  keeps its problem areas: a label scheme (`assets/mail_kinds.json`), with
-  each label's description, what not to give it and examples, and
-  guidelines (`assets/mail_kinds_guidelines.md`). The labelling tasks read
-  both, and an LLM agent assigned to a task reads them from the task;
-  training takes its labels from the answers. Changing the scheme means
-  editing the two files and the label list of the `review` tasks, which
-  takes a typed list (see [facts.md](facts.md)). Labels are exclusive, one
-  per message; a multi-label scheme is out of scope.
-- **The pilot is where a scheme is settled.** You start from the default or
-  your own draft, label 100 messages by hand with an LLM's answers to
-  compare, and settle the labels, descriptions and guidelines from the
-  disagreements, as helpdesk-routing's pilot does.
-- **The sample is drawn by a script**, `scripts/make_splits.py`, standard
-  library only, from the importer's JSONL with a fixed seed: spread over
-  the years, then, where messages have a Gmail category, with a minimum
-  from each, since Promotions, Social and Forums can be nearly empty, and
-  with enough from each five-year period for the eval set to hold about 30
-  of it. Your own mail is left out: the model sorts the mail you receive.
-  It writes the pilot, eval set and training pool, disjoint, and the rest.
-- **Results are given by age of mail** as well as overall and per label:
-  for each five-year period of the archive, with the number of eval
-  messages behind each score. Old mail comes from other senders, services
-  and formats than recent mail, so a model can do well overall and badly
-  on it, and old mail is what an archive is sorted to clear out. Old
-  periods are oversampled for this, so the overall score weights each
-  period by its share of the archive.
+- **The categories are an input**, in two assets: a label scheme
+  (`assets/mail_kinds.json`), with each label's description, what not to
+  give it and examples, and guidelines for the person
+  (`assets/mail_kinds_guidelines.md`). The labelling task shows both. The
+  LLM gets the scheme's descriptions and its own instructions, not the
+  guidelines. Training takes its labels from the answers. To change the
+  scheme, edit the two files and the label list of the `review` tasks.
+  Labels are exclusive, one per message.
+- **The pilot is where a scheme is settled.** Start from the default or
+  your own draft, label 100 messages by hand with the LLM's answers to
+  compare, and change the labels, descriptions and guidelines where the
+  two disagree.
+- **The sample is drawn by a script**, `scripts/make_splits.py`, from the
+  importer's JSONL with a fixed seed. It spreads the sample over the
+  years, takes a minimum from each Gmail category (some are nearly
+  empty), and takes enough from each five-year period for the eval set to
+  hold about 30 of it. Your own mail is left out, since the model sorts
+  mail you receive. It writes the pilot, eval set and training pool,
+  disjoint, and the rest.
+- **Results are given by age of mail**, per five-year period, with the
+  number of eval messages behind each score. Old mail comes from other
+  senders and services, and it is what an archive is sorted to clear out,
+  so a model that does well overall but badly on it is no use. Old periods
+  are oversampled, so the overall score weights each period by its share
+  of the archive.
 - **Results are given by language too.** An archive is often in more than
-  one language: in the one checked, over half the mail is in one language
-  and most of the rest in another. In the pilot labels the language went
-  with the kind: most mail in the first language was work, and nearly all
-  automated mail was in the second. A model can learn the language as a
-  shortcut and score well overall while mislabelling, say, personal mail
-  in the language that is mostly work. So scores are also given per
-  language, from the importer's guess, with the number of eval messages
-  behind each. The LLM's agreement with the person in the pilot is given
-  by language too, since its prompt is in English.
-- **The default scheme sorts by what to keep**, for mailcellar: work,
-  personal mail and your own records are kept, automated and bulk mail can
-  go. It is built around that, not around Gmail's categories, though it
-  maps onto them at a coarser level for the side comparison below. It was
-  settled in the pilot from a profile of the archive (counts only) and the
-  person's labels: most received mail is correspondence with people at
-  organisations, and bulk mail and mailing lists are rare.
+  one language, and the kind can go with the language: in the archive
+  checked, most mail in one language was work. A model can then learn the
+  language instead of the kind. Scores are given per language, from the
+  importer's guess, and so is the LLM's agreement with the person, since
+  its instructions are in English.
+- **The default scheme sorts by what to keep.** Work, personal mail and
+  your own records are kept; automated and bulk mail can go. It maps onto
+  Gmail's categories only roughly.
   - `WORK`: mail about your job, from people and the job's own paperwork.
   - `PERSONAL`: a person you know writing about your life outside work.
   - `ADMIN`: your own affairs with organisations: receipts, bookings,
-    statements, contracts, tax, health, school, housing, insurance. Kept
-    as records.
+    statements, contracts, tax, health, school, housing, insurance.
   - `AUTOMATED`: mail a system sends about your account or activity:
     codes, alerts, shipping updates, reminders, notices from work systems.
   - `BULK`: the same message sent to many people: newsletters, marketing,
     announcements and mailing lists.
-- **A kind is advice, not a decision to delete.** The template labels
-  mail; what is kept or offloaded is decided by rules in the tool that
-  acts on the labels, such as mailcellar's. Legal holds, duties to keep
-  records for a number of years, and the retention policies of a work
-  account are out of scope: a predicted label can't know about them, so
-  those rules have to check them. The template's README says so.
-- **The bar is set per label, around the costly mistake.** Errors aren't
-  equal: mail to keep given a kind that is dropped may be offloaded, while
-  mail to drop given a kind that is kept only takes up space. So the bar
-  the model has to reach names the costly mistakes and limits them, as
-  well as setting overall agreement. With your own scheme, you name the
-  costly mistakes; the bar is written down in the pilot, before anything
-  is scored. For the default scheme, measured on the eval set against the
-  person's labels: at most 2% of `WORK`, `PERSONAL` or `ADMIN` mail
-  labelled `AUTOMATED` or `BULK`, overall and in each language with at
-  least 50 eval messages; overall agreement of at least 85%, weighted by
-  period; and no language more than 10 points behind another. For scale,
-  in the pilot the person's first labels agreed with their reviewed ones
-  on 94 of 100, and the local LLM's on 77, with 5 of 86 messages to keep
-  given a dropped kind.
-- **Gmail's categories are an optional comparison**, not part of the
-  headline. Where a scheme maps onto them, they are scored as one more
-  annotator, at the coarser level, as llm-classifier-eval treats an LLM.
-  For the default scheme the mapping is Primary to `WORK`, `PERSONAL` or
-  `ADMIN`, Updates to `ADMIN` or `AUTOMATED`, Social to `AUTOMATED`, and
-  Promotions and Forums to `BULK`; in the archive checked this mostly
-  measures Primary against Updates. It is scored only on the messages that
-  have a category.
-- **Text the model sees**: the sender's name and domain, the subject,
-  whether there's a `List-Unsubscribe` header, then the first part of the
-  visible body text. Whether the header lines help is measured, not
-  assumed.
-- **One local LLM, served by Ollama on your own machine** (by default Qwen3
-  14B with thinking off, Apache-2.0), labels the pilot, the eval set and the
-  training pool, so no mail leaves the machine and there is no fee per
-  message; it costs machine time and power instead. It is called by
-  `llm_to_dataset`, the action llm-classifier-eval ships (MIT), copied into
-  `recipes/`: it sends the label definitions, the instructions and the
-  message to an OpenAI-compatible endpoint and saves the answers as an
-  annotator of their own; the copy asks for no thinking, which takes a reply
-  from half a minute to about a second (see [facts.md](facts.md)). On a Mac
-  the cluster reaches Ollama on the Mac's localhost through Lima, so no port
-  is opened to the network. Cloud LLMs aren't used: Gemini's free tier may
-  use and read what it is sent, its paid tier still keeps it for a while to
-  check for abuse, and Hugging Face hands requests to providers whose data
-  policies it doesn't state (see [facts.md](facts.md)). The cost is a weaker
-  comparison: the write-up measures the small model against a 14B LLM, not a
-  leading one, and the drafts need more curating. Any OpenAI-compatible
-  endpoint works, so a user who accepts a cloud service's terms can point
-  the action at one.
-- **The LLM drafts; the person decides.** The pilot judged the local LLM
-  good enough to draft the training pool, not to label anything on its
-  own: the person checks every draft, which catches its errors, and the
-  time drafting saves is measured when the training pool is curated. Its
-  instructions are kept in `config/llm_instructions.txt`, generic for any
-  archive. They follow the guidelines' order and add one line against its
-  main error in the pilot, giving `WORK` to mail from a person that isn't
-  about the job.
-- **Costs are measured on one machine.** The write-up gives the time per
-  1,000 messages for the small model and the local LLM, run on the same
-  machine, the time training takes, and the person's hours labelling and
-  curating in the pilot, eval set and training pool. Energy is not
-  measured; time on one machine stands in for it. A cloud LLM's fee isn't
-  measured either, since none is used.
-- **Train from a blank pipeline**, so there is no base model whose licence
-  needs checking, and CPU is enough. Whether it is English (`en`) or
-  spaCy's multi-language one (`xx`) is measured on the eval set, not
-  assumed, since an archive is often not all English.
-- **The importer is a script run on the host**, not a recipe on the
-  cluster: `scripts/mail_to_jsonl.py`, standard library only, reading an
-  mbox (Google Takeout), a folder of `.eml` files, or a Got Your Back
-  backup (its `msg-db.sqlite` for labels). It writes JSONL (`text`,
-  `meta`) for `ellf publish data`, as support-insights' input is. The meta
-  keeps only a hash of the Message-ID, the date and year, the sender's
-  domain, whether there's a `List-Unsubscribe` header, Gmail's category
-  and whether it is your own mail (Gmail's Sent or Drafts), and a rough
-  guess at the body's language from its common words; no address,
+- **A kind is advice, not a decision to delete.** What is kept or
+  offloaded is up to the tool that acts on the kinds, such as mailcellar.
+  A predicted kind knows nothing of legal holds, duties to keep records or
+  a work account's retention policy, so those rules have to check them.
+  The README says so.
+- **The bar is set around the costly mistake.** Mail to keep given a kind
+  that can go may be offloaded; the reverse only takes up space. So the
+  bar limits the costly mistake as well as setting overall agreement. It
+  is written down in the pilot, before anything is scored. With your own
+  scheme, you name the costly mistakes. For the default scheme:
+
+  | Test | Limit | Applies to |
+  |---|---|---|
+  | Mail to keep given a kind that can go | at most 2% | overall, and each language with 50+ eval messages |
+  | Agreement, weighted by period | at least 85% | overall |
+  | Gap between languages | at most 10 points | languages with 50+ eval messages |
+
+  It is measured twice. Against the LLM on the eval set of 300: did the
+  model learn what it was taught? Against the person on the pilot's 100:
+  is what it learnt right? The pilot is small, so each figure there comes
+  with its 95% interval, and the language tests don't apply.
+- **The LLM labels; the person labels only the pilot.** Solo allows one
+  annotator. The LLM labels the eval set and the training pool alone, and
+  its labels are used as they are; checking them would have cost the
+  person about two hours more. So the headline measures distillation: how
+  close the small model gets to the LLM it learns from. The LLM's own
+  errors pass into the training labels, and only the pilot shows them, so
+  the LLM is scored there too. The person's consistency is their first
+  pilot labels against the ones they settled on after review, which
+  overstates how often they would agree with themselves a week later.
+- **One local LLM, served by Ollama** (by default Qwen3 14B with thinking
+  off, Apache-2.0), so no mail leaves the machine and there is no fee per
+  message. It is called by `llm_to_dataset`, the action llm-classifier-eval
+  ships (MIT), copied into `recipes/` and changed to turn thinking off,
+  save in batches and retry. Its instructions are in
+  `config/llm_instructions.txt`, generic for any archive. Cloud LLMs aren't
+  used: Gemini's free tier may read what it is sent, its paid tier keeps
+  it for a while, and Hugging Face doesn't state its providers' data
+  policies. The cost is a weaker teacher than a leading model. Any
+  OpenAI-compatible endpoint works, for a user who accepts a service's
+  terms.
+- **Gmail's categories are a side comparison**, scored as one more
+  annotator where a scheme maps onto them, and only on messages that have
+  one. For the default scheme: Primary to `WORK`, `PERSONAL` or `ADMIN`,
+  Updates to `ADMIN` or `AUTOMATED`, Social to `AUTOMATED`, Promotions and
+  Forums to `BULK`.
+- **The text the model sees** is the sender's name and domain, the
+  subject, whether there's a `List-Unsubscribe` header, and the start of
+  the visible body. Whether the header lines help is measured too.
+- **Costs are measured on one machine**: time per 1,000 messages for the
+  small model and the LLM, training time, the LLM's labelling time and
+  the person's hours. Energy isn't measured; time stands in for it.
+- **Train from a blank pipeline**, so no base model's licence needs
+  checking and CPU is enough. English (`en`) or spaCy's multi-language
+  pipeline (`xx`) is chosen on the eval set.
+- **The importer is a script run on the host**, `scripts/mail_to_jsonl.py`,
+  standard library only. It reads an mbox (Google Takeout), a folder of
+  `.eml` files or a Got Your Back backup, and writes JSONL for
+  `ellf publish data`. The meta keeps a hash of the Message-ID, the date,
+  the sender's domain, the `List-Unsubscribe` flag, Gmail's category,
+  whether it is your own mail, and a guess at the language. No address,
   recipient or user label is kept, and chats are dropped.
-  `--no-header-lines` writes the body alone, for measuring whether the
-  header lines help. The llm-to-jev template ships a `scripts/` folder
-  too.
+  `--no-header-lines` writes the body alone.
 - **Nothing from real mail is published.** The template ships synthetic
-  sample mail with fictional senders, as support-insights ships generated
-  tickets. The write-up gives only figures, never a quoted message, and
-  the model trained on real mail stays private. The Enron corpus is not
-  used: CMU's page states no licence and asks users to be sensitive to the
-  privacy of the people in it.
-- **One person labels.** Solo allows one annotator, so the two-annotator
-  agreement check the Explosion templates use isn't available. Instead the
-  person relabels part of the eval set a week later, blind, to measure
-  their own consistency.
+  mail with fictional senders. The write-up gives only figures, and the
+  model trained on real mail stays private. The Enron corpus isn't used:
+  CMU's page states no licence and asks users to respect the privacy of
+  the people in it.
+
+Borrowed from other Ellf templates: the scheme as assets and the pilot
+(helpdesk-routing), JSONL input and synthetic sample data
+(support-insights), a `scripts/` folder (llm-to-jev), and the
+`llm_to_dataset` action and the LLM as one more annotator
+(llm-classifier-eval).

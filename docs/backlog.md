@@ -2,38 +2,26 @@
 
 In order. Each item says when it is done.
 
-6. **Eval set.** Re-import and republish the splits first, so their meta
-   has the language guess; the same archive and seed give the same
-   splits. Label the 300 blind, with no model or LLM in the loop. A week
-   later, label 50 of them again blind.
-   Done when: the eval set is labelled and the self-agreement figure is
-   recorded.
-   Progress (2026-11-20):
-   - The archive was re-imported with the language guess (3 min 9 s) and
-     the splits redrawn: the same messages in every split. They are
-     published as version 1.2.0.
-   - Task `mail-eval` (dataset `mail_eval`) is ready on scheme 0.4.0. The
-     cards now hide the meta (`hide_meta` in `config/prodigy_mail.json`),
-     which the pilot showed, Gmail's category included, so the eval labels
-     are blind to Gmail.
-   - Left: the 300 labels, then 50 of them again a week later.
-7. **Training pool.** The local LLM drafts labels, with the instructions
-   in `config/llm_instructions.txt`; the person curates every draft
-   (support-insights' `curate` task), and the curating time is recorded.
-   Done when: the pool is curated.
-8. **Train and score.** Train the text classifier, with a learning curve
-   (`train --train-curve`) to see whether more labels still help, from a
-   blank `en` pipeline and from a blank `xx` one, and keep the better.
-   Score the model and the local LLM against the eval set, overall, per
-   label, for each five-year period of the archive and for each language,
-   with the number of eval messages behind each score; the overall score
-   weights each period by its share of the archive. Score Gmail's
-   categories too, through the default scheme's mapping and only on
-   messages that have one, as a side comparison. Record the time per 1,000
-   messages for the model and the local LLM on the same machine, the
-   training time, and the person's hours in steps 5 to 7.
-   Done when: the scores and costs are in a results table, and the model
-   is judged against the bar from step 5.
+8. **Train and score.**
+   - **Train** the text classifier from a blank `en` pipeline and from a
+     blank `xx` one, with a learning curve (`train --train-curve`) to see
+     whether more labels still help, and keep the better.
+   - **Apply the model:** save its answer on each eval and pilot message
+     as an annotator of its own, as `llm_to_dataset` does for the LLM.
+     `train` reports only overall scores, and of the cluster's recipes only
+     the GPU package's `apply_curated_transformer` applies a model (not
+     read), so this probably needs an action of our own.
+   - **Score** with `scripts/score.py` from dataset exports: the model
+     against the LLM on the eval set, and the model and the LLM against
+     the person's reviewed pilot labels, overall, per label, per period
+     and per language, with intervals. Score Gmail's categories too,
+     through the default scheme's mapping, as a side comparison.
+   - **Costs:** the time per 1,000 messages for the model and the local
+     LLM on the same machine, the training time, the LLM's time in steps 6
+     and 7, and the person's hours in step 5.
+
+   Done when: the scores and costs are in [results.md](results.md), and
+   the model is judged against the bar in [design.md](design.md).
 9. **Export and publish.** Export with `/ellf-template`, swap in synthetic
    sample mail, and fill the fields ellf-templates' AGENTS.md lists for
    `templates.json`. The README says how to use your own categories (the
@@ -116,7 +104,27 @@ In order. Each item says when it is done.
    the person labelled the 100 in 8.5 min and reviewed the 25
    disagreements in 5.2 min; their first labels agree with the reviewed
    ones on 94, the local LLM's on 77 (6 min 50 s for 100), with 5 costly
-   mistakes. The LLM drafts and the person decides; its instructions are
-   in `config/llm_instructions.txt`. The bar is in [design.md](design.md).
+   mistakes. Its instructions are in `config/llm_instructions.txt`. The
+   bar is in [design.md](design.md).
    Over half the pilot is in one language and the kind went with it, so
    results are given by language and the importer guesses it.
+6. **Eval set.** Re-import and republish the splits so their meta has
+   the language guess. The local LLM labels the 300, and the pilot's 100
+   again with the final instructions, to score them against the person's
+   reviewed labels.
+   Done when: the eval set is labelled and the LLM's pilot score with the
+   final instructions is recorded.
+   Done 2026-11-20: the archive re-imported with the language guess and
+   the same splits published as version 1.2.0. The person chose not to
+   label the eval set or check the pool, about two hours more, so the
+   LLM's labels are used as they are. The LLM labelled the 300 in 23.5
+   min; with the final instructions it agrees with the person on 79 of
+   the pilot's 100 (see [results.md](results.md)).
+7. **Training pool.** The local LLM labels the 1,000 with the same
+   instructions, and its labels are used as they are; the time is
+   recorded.
+   Done when: the pool is labelled.
+   Done 2026-11-20: 998 messages (two duplicates dropped) labelled by
+   Qwen3 14B, every one with a usable answer, in about 70 minutes of
+   machine time over two runs. Qwen3 8B was tried on the pilot first and
+   ruled out (see [results.md](results.md)).
