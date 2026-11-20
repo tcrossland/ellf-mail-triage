@@ -22,6 +22,10 @@ template's `llm_recipes` (MIT, Copyright (c) 2026 ExplosionAI GmbH; see
   seconds, for timeouts, lost connections and 5xx replies; a 4xx reply still
   stops the action at once. The timeout is 120 seconds, not 60, to leave room
   for a cold model load.
+- **`--label-details`** also sends each label's `do_not_mark` list and examples,
+  not only its description. They come before the text, so the start of the
+  prompt is the same for every text and Ollama serves it from its cache. With
+  this template's scheme the prompt grows from about 800 tokens to about 2,150.
 - **Replies are read leniently:** label names match whatever their case, and
   quotes, asterisks and a trailing full stop are ignored.
 - **`--workers`** (default 1) sends that many requests at once. It helps only

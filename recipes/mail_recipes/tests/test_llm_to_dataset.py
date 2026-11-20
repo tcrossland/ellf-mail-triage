@@ -111,6 +111,56 @@ def test_classify_can_turn_thinking_off():
     assert seen[0]["reasoning_effort"] == "none"
 
 
+DETAILED = LabelScheme.from_json(
+    {
+        "GREEN": {
+            "description": "Clearly yes.",
+            "do_not_mark": ["a hedged yes (RED)", "a question back (RED)"],
+            "examples": [{"text": "Yes.\nAlways.", "label": "GREEN"}, {"text": "Yes, if it rains."}],
+        },
+        "RED": {"description": "Clearly no."},
+    }
+)
+
+
+def test_label_definitions_are_descriptions_only_by_default():
+    assert module.label_definitions(DETAILED) == "- GREEN: Clearly yes.\n- RED: Clearly no."
+
+
+def test_label_definitions_with_details_add_what_not_to_mark_and_examples():
+    assert module.label_definitions(DETAILED, details=True) == (
+        "- GREEN: Clearly yes.\n"
+        "  Not GREEN: a hedged yes (RED); a question back (RED)\n"
+        "  Example of GREEN:\n"
+        "    Yes.\n"
+        "    Always.\n"
+        "  Example that is not GREEN:\n"
+        "    Yes, if it rains.\n"
+        "- RED: Clearly no."
+    )
+
+
+def test_classify_sends_the_details_before_the_text():
+    seen: list[dict[str, Any]] = []
+    eg = {"text": "Do you have a licence? Yes."}
+    classify(eg, DETAILED, True, client=_client("GREEN", seen), model="m", instructions="Grade.", details=True)
+    prompt = seen[0]["messages"][0]["content"]
+    assert prompt.index("Not GREEN: a hedged yes") < prompt.index(eg["text"])
+    assert "    Yes, if it rains." in prompt
+
+
+def test_the_action_passes_label_details_to_classify(tmp_path, monkeypatch):
+    calls: list[bool] = []
+
+    def fake(eg, scheme, exclusive, *, details=False, **kwargs):
+        calls.append(details)
+        return ["GREEN"]
+
+    monkeypatch.setattr(module, "classify", fake)
+    llm_to_dataset(input=_input(tmp_path, ["a", "b"]), label=["GREEN", "RED"], output=_output(), label_details=True)
+    assert calls == [True, True]
+
+
 class FakeOutput:
     """Stands in for an Output asset: keeps what the action writes."""
 

@@ -90,6 +90,28 @@ def read_reply(reply: str, names: list[str], exclusive: bool) -> Optional[list[s
     return chosen
 
 
+def label_definitions(scheme: LabelScheme, details: bool = False) -> str:
+    """The labels as the prompt lists them: each name with its description,
+    and with `details` what not to give it and its examples, a text with no
+    label being one that doesn't get it. The result is the same for every
+    text, so an endpoint that caches the start of a prompt reuses it."""
+
+    def indent(text: str) -> str:
+        return "\n".join(f"    {line}" for line in text.strip().splitlines())
+
+    def entry(spec: Any) -> str:
+        lines = [f"- {spec.name}: {spec.description}" if spec.description else f"- {spec.name}"]
+        if details:
+            if spec.do_not_mark:
+                lines.append(f"  Not {spec.name}: " + "; ".join(spec.do_not_mark))
+            for example in spec.examples:
+                kind = "of" if example.get("label") == spec.name else "that is not"
+                lines.append(f"  Example {kind} {spec.name}:\n{indent(example['text'])}")
+        return "\n".join(lines)
+
+    return "\n".join(entry(spec) for spec in scheme.labels)
+
+
 def classify(
     eg: dict[str, Any],
     scheme: LabelScheme,
@@ -99,6 +121,7 @@ def classify(
     model: str,
     instructions: str,
     reasoning_effort: Optional[str] = None,
+    details: bool = False,
 ) -> Optional[list[str]]:
     """The labels the LLM gives a text, or None if it gave no usable answer.
 
@@ -111,15 +134,12 @@ def classify(
     exclusive (bool): Whether exactly one label applies.
     reasoning_effort (Optional[str]): Sent as `reasoning_effort` when set, e.g.
         "none" to turn off a model's thinking (Qwen3 through Ollama).
+    details (bool): Also send each label's `do_not_mark` list and examples.
     RETURNS (Optional[list[str]]): The labels that apply, from `scheme`.
     """
-    definitions = "\n".join(
-        f"- {spec.name}: {spec.description}" if spec.description else f"- {spec.name}"
-        for spec in scheme.labels
-    )
     task = "the one label" if exclusive else "every label"
     prompt = (
-        f"{instructions}\n\nLabels:\n{definitions}\n\n"
+        f"{instructions}\n\nLabels:\n{label_definitions(scheme, details)}\n\n"
         f"Reply with {task} that applies to the text, by name, separated by "
         f"commas, and nothing else. Reply NONE if none applies.\n\nText:\n{eg['text']}"
     )
@@ -305,6 +325,10 @@ def save_answers(
             optional_title="Set the reasoning effort",
             description="Sent as reasoning_effort, e.g. none to turn off a model's thinking (Qwen3 through Ollama). Leave it unset for endpoints that don't take it.",
         ),
+        "label_details": BoolProps(
+            title="Send the full label definitions",
+            description="Also send each label's list of what not to give it and its examples, not only its description. The start of the prompt is the same for every text, so an endpoint that caches it adds little time.",
+        ),
         "session": TextProps(
             title="Annotator name",
             description="Who the answers are credited to in the review and the dashboard.",
@@ -339,6 +363,7 @@ def llm_to_dataset(
     base_url: str = "http://192.168.5.2:11434/v1",
     instructions: str = "",
     reasoning_effort: Optional[str] = "none",
+    label_details: bool = False,
     session: str = "LLM",
     workers: int = 1,
     batch_size: int = 50,
@@ -392,6 +417,7 @@ def llm_to_dataset(
                 model=model,
                 instructions=instructions.strip(),
                 reasoning_effort=reasoning_effort,
+                details=label_details,
             )
 
         for batch in answer_in_batches(todo, answer, batch_size=batch_size, workers=workers):

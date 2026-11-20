@@ -48,6 +48,27 @@ Against the bar, the LLM itself fails on the pilot: 5.8% costly mistakes
 against a limit of 2%, and 83% agreement against 85%. Since the small
 model learns from it, the small model will most likely fail too.
 
+### The full label definitions
+
+With `--label-details` the prompt also carries each kind's list of what
+not to give it and the scheme's examples, about 2,150 tokens instead of
+800, at the same speed since the added part is cached. On the pilot:
+
+| | Descriptions only | Full definitions |
+|---|---|---|
+| Agreement | 79/100 | 71/99 |
+| Weighted by period | 83.0% | 73.8% |
+| Mail to keep given a kind that can go | 5/86 | 2/85 (1% to 8%) |
+| The archive's main language | 46/49 | 39/48 |
+| English | 29/45 | 29/45 |
+
+The answer changed on 18 messages. The fuller prompt fixed 3 costly
+mistakes and made none, but `PERSONAL` given `WORK` rose from 4 to 9.
+Neither change is clear on 100 messages (exact tests on the changed
+answers: p = 0.25 for costly mistakes, p = 0.14 for agreement), and both
+versions miss the bar. The eval set and training pool were labelled with
+the descriptions only.
+
 ### A smaller LLM
 
 Qwen3 8B, same prompt, on the same pilot: twice as fast, but only 49 of
@@ -80,6 +101,57 @@ The labels the small model learns from and is scored against, by kind:
 | BULK | 121 | 49 |
 | AUTOMATED | 83 | 20 |
 | All | 998 | 300 |
+
+## Other models
+
+Tried outside the template, in Python on the Mac, on the same splits:
+
+- **Zero-shot**: `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`
+  given each kind's description, with no training.
+- **Embeddings and logistic regression**: sentence embeddings from
+  `sentence-transformers/paraphrase-multilingual-mpnet-base-v2` and a
+  logistic regression on top.
+- **SetFit**: the same sentence model fine-tuned on pairs of labelled
+  messages, then a logistic regression on top.
+
+Each trained model was trained twice: on the LLM's labels for the
+training pool, and on the person's labels for the pilot. Trained on the
+person's labels, it is scored on the pilot by five-fold cross-validation:
+each fifth is predicted by a model trained on the other 80.
+
+| | Agreement with the person | Costly, against the person | Agreement with the LLM | Costly, against the LLM |
+|---|---|---|---|---|
+| The LLM (14B) | 79/100 | 5/86 | | |
+| Zero-shot | 28/100 | 9/86 | 86/300 | 17/231 |
+| Embeddings, the LLM's labels | 70/100 | 6/86 | 225/300 | 11/231 |
+| SetFit, the LLM's labels | 68/100 | 11/86 | 258/300 | 7/231 |
+| Embeddings, the person's labels | 69/100 | 0/86 | | |
+| SetFit, the person's labels | 73/100 (64% to 81%) | 0/86 | 209/300 | 5/231 |
+
+"Costly" is mail to keep given a kind that can go. Against the person,
+SetFit trained on the LLM's labels agrees on 40 of 49 in the archive's
+main language and 25 of 45 in English; trained on the person's labels,
+on 40 and 30.
+
+- **Zero-shot** is far behind and is ruled out.
+- **SetFit copies the LLM best** (86% on the eval set, 87.6% and 2.0%
+  costly weighted by period) but comes no closer to the person than the
+  plain embeddings. A model that learns from the LLM can't do much better
+  than the LLM's 79.
+- **Trained on the person's 100**, SetFit agrees most often, but the
+  intervals overlap. Its 0 costly mistakes mean little: it almost never
+  gives a kind that can go (7 answers of 100), and of the person's 14
+  `AUTOMATED` and `BULK` messages it found 2. The pilot has 7 of each,
+  too few to learn them from.
+
+Machine time:
+
+| Model | Training | Labelling 1,000 messages |
+|---|---|---|
+| Zero-shot | none | about 12.5 min |
+| Embeddings, on 998 | 19 s | 17 s |
+| SetFit, on 998 (600 steps) | 33 min | 25 s |
+| SetFit, on 80 (100 steps) | about 5.5 min | 25 s |
 
 ## The small model
 
