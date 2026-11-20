@@ -8,15 +8,17 @@ sort by what to keep: personal, transactional, notification, bulk and
 mailing list.
 
 The question it answers: on your own archive and your own categories, how
-close does a model that runs locally and costs nothing per message get to an
-LLM? It scores the model against the LLMs that labelled alongside it and the
-person who labelled the evaluation set, and, for the default categories,
-against Gmail's own.
+close does a small model that runs locally get to an LLM, and what does each
+cost in machine time and in the hours a person spends labelling? It scores the
+model against a local LLM that labelled alongside it, run through Ollama so no
+mail leaves your machine, and against the person who labelled the evaluation
+set, and, for the default categories, against Gmail's own.
 
-**Status:** the importer is built: `scripts/mail_to_jsonl.py` turns an mbox,
-a folder of `.eml` files or a Got Your Back backup into JSONL for Ellf.
-[docs/design.md](docs/design.md) says how the rest will work and
-[docs/backlog.md](docs/backlog.md) what comes next.
+**Status:** `scripts/mail_to_jsonl.py` turns an mbox, a folder of `.eml`
+files or a Got Your Back backup into JSONL for Ellf, `scripts/make_splits.py`
+draws the pilot, eval set and training pool from it, and `assets/` holds the
+default categories. [docs/design.md](docs/design.md) says how the rest will
+work and [docs/backlog.md](docs/backlog.md) what comes next.
 
 ## Privacy
 

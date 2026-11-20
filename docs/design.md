@@ -2,17 +2,20 @@
 
 ## Why
 
-People sort an archive for their own reasons: what to keep, which client or
-project a message belongs to, what still needs a reply. Gmail offers one
-fixed set of categories, and in a real archive they say little: in one
-Gmail account, Primary and Updates hold 99% of categorised mail, Promotions
-0.3% and Social almost none (see [facts.md](facts.md)). They are also
-missing from older mail and from mail that came from another provider.
-An LLM can sort mail into
-any categories, but per message it costs money and time, and a cloud LLM
-sees the mail. A small classifier trained on the archive itself, on
-categories its owner chose, sorts every message, old mail included,
-without sending it anywhere once it is trained.
+People sort an archive for their own reasons: what to keep, which client
+or project a message belongs to, what still needs a reply. Gmail offers
+one fixed set of categories, and in a real archive they say little: in one
+Gmail account, Primary and Updates hold 99% of categorised mail,
+Promotions 0.3% and Social almost none (see [facts.md](facts.md)). They
+are also missing from older mail and from mail that came from another
+provider. An LLM can sort mail into any categories, but each message takes
+a second or more of a large model's time, on a paid service or on your own
+hardware, and a cloud LLM sees the mail. A small classifier trained on the
+archive itself, on categories its owner chose, should sort every message,
+old mail included, far faster on the same machine, without sending it
+anywhere. What it costs instead is labelling: a person's hours in the
+pilot, the eval set and the training pool. Whether that trade pays is
+measured, not assumed.
 
 [mailcellar](https://github.com/mailcellar/mailcellar), which offloads old
 mail out of Gmail by rule, is the first intended user: a `kind` it could
@@ -33,9 +36,11 @@ drafts and a person settles, and measures it against the LLM and against
 the person.
 
 The question it answers, and the write-up's headline: on your own archive
-and your own categories, how close does a model that runs locally and
-costs nothing per message get to an LLM? The write-up answers it for the
-default scheme on one archive; other schemes are supported but not tested.
+and your own categories, how close does a small model that runs locally
+get to an LLM, and what does each cost: machine time per 1,000 messages,
+and the person's hours the small model takes to train? The write-up
+answers it for the default scheme on one archive; other schemes are
+supported but not tested.
 
 ## Decisions
 
@@ -102,16 +107,30 @@ default scheme on one archive; other schemes are supported but not tested.
   whether there's a `List-Unsubscribe` header, then the first part of the
   visible body text. Whether the header lines help is measured, not
   assumed.
-- **Which LLMs: open.** Both built-in LLM agents send the mail to a
-  service: `gemini_agent` to Google, `hf_llm_agent` to Hugging Face and an
-  Inference Provider. None runs an LLM on the cluster, so a local LLM
-  would need an agent recipe of our own in `recipes/` (see
-  [facts.md](facts.md)). Whichever are used label the pilot as separate
-  annotators; their agreement with the settled labels, their speed and
-  their cost decide which one drafts the training pool, and each also
-  labels the eval set. No mail goes to a service before its data-use
-  terms are read, and mail you wouldn't send out stays out of the sample
-  it sees.
+- **One local LLM, served by Ollama on your own machine** (by default Qwen3
+  14B with thinking off, Apache-2.0), labels the pilot, the eval set and the
+  training pool, so no mail leaves the machine and there is no fee per
+  message; it costs machine time and power instead. It is called by
+  `llm_to_dataset`, the action llm-classifier-eval ships (MIT), copied into
+  `recipes/`: it sends the label definitions, the instructions and the
+  message to an OpenAI-compatible endpoint and saves the answers as an
+  annotator of their own; the copy asks for no thinking, which takes a reply
+  from half a minute to about a second (see [facts.md](facts.md)). On a Mac
+  the cluster reaches Ollama on the Mac's localhost through Lima, so no port
+  is opened to the network. Cloud LLMs aren't used: Gemini's free tier may
+  use and read what it is sent, its paid tier still keeps it for a while to
+  check for abuse, and Hugging Face hands requests to providers whose data
+  policies it doesn't state (see [facts.md](facts.md)). The cost is a weaker
+  comparison: the write-up measures the small model against a 14B LLM, not a
+  leading one, and the drafts need more curating. Any OpenAI-compatible
+  endpoint works, so a user who accepts a cloud service's terms can point
+  the action at one.
+- **Costs are measured on one machine.** The write-up gives the time per
+  1,000 messages for the small model and the local LLM, run on the same
+  machine, the time training takes, and the person's hours labelling and
+  curating in the pilot, eval set and training pool. Energy is not
+  measured; time on one machine stands in for it. A cloud LLM's fee isn't
+  measured either, since none is used.
 - **Train from a blank English pipeline**, so there is no base model whose
   licence needs checking, and CPU is enough.
 - **The importer is a script run on the host**, not a recipe on the

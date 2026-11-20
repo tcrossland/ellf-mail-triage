@@ -2,36 +2,35 @@
 
 In order. Each item says when it is done.
 
-4. **Choose the LLMs.** Between `gemini_agent`, `hf_llm_agent` and an
-   agent recipe of our own that runs a model on the cluster, none of
-   which is settled (see [facts.md](facts.md)). Read the data-use terms of
-   each service considered before any mail goes to it.
-   Done when: the choice and its reasons are in [design.md](design.md),
-   and the terms it rests on are checked in facts.md.
-5. **Pilot.** Label the 100 by hand, flagging every message you hesitate
-   on, with each chosen LLM as a separate annotator on the same task.
-   Settle the labels, descriptions and guidelines in the two assets from
-   the disagreements and flags (as helpdesk-routing's pilot does).
-   Done when: the scheme is settled, one LLM is chosen to draft the
-   training pool, and the bar the model has to reach is written down
-   before anything is scored: per label, with a limit on the costly
-   mistakes (mail to keep given a kind that is dropped).
+5. **Pilot.** Copy `llm_to_dataset` from llm-classifier-eval into
+   `recipes/`, change it to ask for no thinking (see [facts.md](facts.md)),
+   and publish it. Label the 100 by hand, flagging every message you
+   hesitate on, and save the local LLM's answers on the same messages as a
+   separate annotator. Settle the labels, descriptions and guidelines in
+   the two assets from the disagreements and flags (as helpdesk-routing's
+   pilot does).
+   Done when: the scheme is settled, the local LLM is judged good enough
+   to draft the training pool (or a bigger local model is), and the bar
+   the model has to reach is written down before anything is scored: per
+   label, with a limit on the costly mistakes (mail to keep given a kind
+   that is dropped).
 6. **Eval set.** Label the 300 blind, with no model or LLM in the loop. A
    week later, label 50 of them again blind.
    Done when: the eval set is labelled and the self-agreement figure is
    recorded.
-7. **Training pool.** The chosen LLM drafts labels; the person curates them
+7. **Training pool.** The local LLM drafts labels; the person curates them
    (support-insights' `curate` task).
    Done when: the pool is curated.
 8. **Train and score.** Train the text classifier, with a learning curve
    (`train --train-curve`) to see whether more labels still help. Score
-   the model and each LLM against the eval set, overall, per label, and
+   the model and the local LLM against the eval set, overall, per label, and
    for each five-year period of the archive, with the number of eval
    messages behind each score; the overall score weights each period by
    its share of the archive. Score Gmail's categories too, through the
    default scheme's mapping and only on messages that have one, as a side
-   comparison. Record time and cost per 1,000 messages for the model and
-   each LLM.
+   comparison. Record the time per 1,000 messages for the model and the
+   local LLM on the same machine, the training time, and the person's
+   hours in steps 5 to 7.
    Done when: the scores and costs are in a results table, and the model
    is judged against the bar from step 5.
 9. **Export and publish.** Export with `/ellf-template`, swap in synthetic
@@ -41,7 +40,7 @@ In order. Each item says when it is done.
    scheme is tested, and that a kind is advice: rules that act on it have
    to check legal holds and duties to keep records themselves. Tags: Text
    Classification, LLM Distillation, Evaluation, Data Import & Export,
-   spaCy, and the chosen LLM.
+   spaCy, and one for Ollama if the list has it.
    Done when: this repo is public with the template and the write-up, and
    nothing in it comes from real mail.
 10. **Offer it to Explosion.** By their documented route for contributed
@@ -87,3 +86,13 @@ In order. Each item says when it is done.
    one Gmail backup published as `Mail (pilot)`, `Mail (eval)` and
    `Mail (train)`. Version 1.1.0 draws enough from each five-year period
    for the eval set to hold about 30 of it, so step 8 can score by age.
+4. **Choose the LLMs.** Between `gemini_agent`, `hf_llm_agent` and an
+   agent recipe of our own that runs a model on the cluster, none of
+   which is settled (see [facts.md](facts.md)). Read the data-use terms of
+   each service considered before any mail goes to it.
+   Done when: the choice and its reasons are in [design.md](design.md),
+   and the terms it rests on are checked in facts.md.
+   Done 2026-11-20: one local LLM, Qwen3 14B with thinking off, through
+   Ollama, called by llm-classifier-eval's `llm_to_dataset` action rather
+   than an agent of our own; no cloud LLM, after reading Gemini's and
+   Hugging Face's terms.
