@@ -16,6 +16,9 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
+# recipes/ holds code adapted from explosion/ellf-templates, kept in its own
+# style so it diffs cleanly against the original.
+extend-exclude = ["recipes"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]

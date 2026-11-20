@@ -1,0 +1,7 @@
+{
+  "show_flag": true,
+  "custom_theme": {
+    "cardMaxWidth": 1000
+  },
+  "global_css": ".prodigy-content { text-align: left; white-space: pre-wrap; font-size: 15px; line-height: 1.5; max-height: calc(100vh - 360px); overflow-y: auto; }"
+}

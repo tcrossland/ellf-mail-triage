@@ -14,6 +14,13 @@ In order. Each item says when it is done.
    the model has to reach is written down before anything is scored: per
    label, with a limit on the costly mistakes (mail to keep given a kind
    that is dropped).
+   Progress (2026-11-20):
+   - `recipes/mail_recipes` is published.
+   - The pilot task `mail-pilot` is ready, using
+     `config/prodigy_mail.json`.
+   - Qwen3 14B's answers on the 100 are in `mail_pilot_llm` as annotator
+     `qwen3-14b`. It took 7 min 15 s, about 4.3 s a message.
+   - Left: your labels, then settling the scheme.
 6. **Eval set.** Label the 300 blind, with no model or LLM in the loop. A
    week later, label 50 of them again blind.
    Done when: the eval set is labelled and the self-agreement figure is
