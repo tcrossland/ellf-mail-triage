@@ -1,6 +1,6 @@
 __title__ = "mail_recipes"
 __name__ = "mail_recipes"
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __summary__ = "Run an LLM classifier over texts and save its answers as annotations"
 __uri__ = ""
 __author__ = "Explosion, adapted for ellf-mail-triage"

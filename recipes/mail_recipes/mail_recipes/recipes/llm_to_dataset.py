@@ -14,11 +14,18 @@ Optionally, the action draws a sample separately within each label the LLM
 gave, so rare labels can be measured, records each sampled answer's weight
 (texts with its label over sampled texts with its label) in its meta, and
 writes the sampled texts without the LLM's labels for people to annotate.
+
+Without a sample or a blind asset, answers are saved in batches as they
+come, and a text that already has this annotator's answer in the output
+dataset is skipped, so a run that stops can be started again and carries
+on. Failed requests are retried a few times before the action stops.
 """
 
 import random
+import time
 from collections import defaultdict
-from typing import Any, Iterable, Literal, Optional, Union, cast
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Callable, Iterable, Iterator, Literal, Optional, Union, cast
 
 import httpx
 import prodigy.recipes.textcat
@@ -40,6 +47,47 @@ from ellf_recipes_sdk import (
     props,
     save_examples,
 )
+
+
+RETRIES = 3
+"""Attempts after the first for a request that times out, can't connect or
+gets a 5xx reply. A 4xx reply (a bad key or model) is not retried."""
+BACKOFF = 2.0
+"""Seconds before the first retry, doubled for each after."""
+
+
+def post_with_retry(client: httpx.Client, path: str, body: dict[str, Any]) -> httpx.Response:
+    """POST `body`, retrying transport errors and 5xx replies with backoff."""
+    for attempt in range(RETRIES + 1):
+        try:
+            response = client.post(path, json=body)
+            if response.status_code < 500 or attempt == RETRIES:
+                response.raise_for_status()
+                return response
+        except httpx.TransportError:
+            if attempt == RETRIES:
+                raise
+        delay = BACKOFF * 2**attempt
+        print(f"Request failed; retrying in {delay:.0f} s ({attempt + 1} of {RETRIES})")
+        time.sleep(delay)
+    raise AssertionError("unreachable")
+
+
+def read_reply(reply: str, names: list[str], exclusive: bool) -> Optional[list[str]]:
+    """The labels named in a reply, matched without regard to case, quotes or
+    trailing punctuation; [] for NONE; None if it names no label, or several
+    when one is wanted. Parts that name no label are ignored."""
+
+    def clean(part: str) -> str:
+        return part.strip().strip("`'\"*.").strip().upper()
+
+    if clean(reply) == "NONE":
+        return []
+    by_upper = {name.upper(): name for name in names}
+    chosen = list(dict.fromkeys(by_upper[c] for c in map(clean, reply.split(",")) if c in by_upper))
+    if not chosen or (exclusive and len(chosen) > 1):
+        return None
+    return chosen
 
 
 def classify(
@@ -78,16 +126,9 @@ def classify(
     body: dict[str, Any] = {"model": model, "messages": [{"role": "user", "content": prompt}]}
     if reasoning_effort:
         body["reasoning_effort"] = reasoning_effort
-    response = client.post("/chat/completions", json=body)
-    response.raise_for_status()
-    reply = response.json()["choices"][0]["message"]["content"].strip()
-    if reply.upper() == "NONE":
-        return []
-    names = set(scheme.names())
-    chosen = [part.strip() for part in reply.split(",") if part.strip() in names]
-    if not chosen or (exclusive and len(chosen) > 1):
-        return None
-    return chosen
+    response = post_with_retry(client, "/chat/completions", body)
+    reply = response.json()["choices"][0]["message"]["content"]
+    return read_reply(reply, scheme.names(), exclusive)
 
 
 def logged_labels(eg: dict[str, Any], key: str, names: list[str]) -> Optional[list[str]]:
@@ -136,6 +177,65 @@ def draw_sample(
         print(f"  {key}: {len(group)}, {n}, {weight:.2f}")
     rng.shuffle(sampled)
     return sampled
+
+
+def answer_in_batches(
+    rows: list[dict[str, Any]],
+    answer: Callable[[dict[str, Any]], Optional[list[str]]],
+    *,
+    batch_size: int,
+    workers: int,
+) -> Iterator[list[tuple[dict[str, Any], Optional[list[str]]]]]:
+    """Each batch of rows with its answers, in order, `workers` at a time."""
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for start in range(0, len(rows), batch_size):
+            batch = rows[start : start + batch_size]
+            yield list(zip(batch, pool.map(answer, batch)))
+
+
+def already_answered(dataset: str, session: str) -> set[str]:
+    """The texts that already have `session`'s answer in `dataset`."""
+    from prodigy.components.db import connect
+
+    db = connect()
+    if dataset not in db:
+        return set()
+    # Filtered here: with prodigy 2.0.0a18, session_ids=[session] matched none
+    pairs = db.iter_st_dataset_session_examples(dataset)
+    return {cast(Any, eg.input).text for name, eg in pairs if name == session}
+
+
+def save_answers(
+    picked: list[tuple[dict[str, Any], list[str], Optional[float]]],
+    names: list[str],
+    *,
+    output: str,
+    session: str,
+) -> None:
+    """Build the examples as the text classification task would and save them."""
+    binary = len(names) == 1
+    texts = [eg for eg, _, _ in picked]
+    if binary:
+        built = list(prodigy.recipes.textcat.add_labels_to_stream(texts, names))
+    else:
+        built = list(prodigy.recipes.textcat.add_label_options(texts, names))
+    examples = []
+    for eg, (_, chosen, weight) in zip(built, picked):
+        if binary:
+            eg["answer"] = "accept" if chosen else "reject"
+        else:
+            eg["accept"] = chosen
+            eg["answer"] = "accept"
+        if weight is not None:
+            eg["meta"] = {**(eg.get("meta") or {}), "weight": weight}
+        examples.append(eg)
+    save_examples(
+        output,
+        examples,
+        session_id=session,
+        parse_as=TextcatExample if binary else TextcatChoiceExample,
+        view_id="classification" if binary else "choice",
+    )
 
 
 @action_recipe(
@@ -209,6 +309,16 @@ def draw_sample(
             title="Annotator name",
             description="Who the answers are credited to in the review and the dashboard.",
         ),
+        "workers": IntProps(
+            title="Requests at once",
+            description="Requests sent to the LLM at the same time. More than 1 helps only if the endpoint serves several at once (for Ollama, OLLAMA_NUM_PARALLEL).",
+            min=1,
+        ),
+        "batch_size": IntProps(
+            title="Save every",
+            description="Without a sample or a blind asset, answers are saved after this many texts, so a stopped run keeps them and a rerun skips them.",
+            min=1,
+        ),
         # fmt: on
     },
     cli_names={"label-list": "label", "label-labels": "label-scheme"},
@@ -230,6 +340,8 @@ def llm_to_dataset(
     instructions: str = "",
     reasoning_effort: Optional[str] = "none",
     session: str = "LLM",
+    workers: int = 1,
+    batch_size: int = 50,
 ) -> None:
     """Save the LLM's answer on every text, or on a sample, to ``output``.
 
@@ -238,12 +350,17 @@ def llm_to_dataset(
     text are versions of one example in the review: one label is an accept or
     reject question, several are a choice. Each distinct text counts once.
 
+    Without a sample or a blind asset, answers are saved every
+    ``batch_size`` texts, in a random order fixed by ``seed``, and texts that
+    already have ``session``'s answer in ``output`` are skipped.
+
     Contract:
         Raises:
             ValueError: If there are no labels, or no text has a usable
-                answer.
-            httpx errors from ``classify`` (not caught): a failed request
-                stops the action, so a bad key or model fails fast.
+                answer (and none had one from an earlier run).
+            httpx errors from ``classify`` (not caught) once its retries are
+                spent, or at once for a 4xx reply: the action stops, so a bad
+                key or model fails fast. Answers saved before then are kept.
             Database errors from ``save_examples()``, and errors from
                 ``Output.write_jsonl`` if the asset name is taken (not caught).
     """
@@ -251,39 +368,59 @@ def llm_to_dataset(
     names = scheme.names()
     if not names:
         raise ValueError("No labels to classify with.")
-    binary = len(names) == 1
-    exclusive = labels_exclusive or binary
+    exclusive = labels_exclusive or len(names) == 1
     rows = list(cast(Iterable[dict[str, Any]], input.load(rehash=True, dedup=True, input_key="text")))
-    answered: list[tuple[dict[str, Any], list[str]]] = []
-    unusable = 0
+    incremental = not sample_size and blind is None
+    done = already_answered(output.name, session) if incremental else set()
+    todo = [eg for eg in rows if eg["text"] not in done]
+    if done:
+        print(f"{len(rows) - len(todo)} of {len(rows)} texts already have {session}'s answer and are skipped")
+    random.Random(seed).shuffle(todo)
     headers = {"Authorization": f"Bearer {api_key.value()}"} if api_key is not None else {}
-    with httpx.Client(base_url=base_url, headers=headers, timeout=60) as client:
-        for eg in rows:
+    answered: list[tuple[dict[str, Any], list[str]]] = []
+    saved = unusable = 0
+    with httpx.Client(base_url=base_url, headers=headers, timeout=120) as client:
+
+        def answer(eg: dict[str, Any]) -> Optional[list[str]]:
             if llm_label_key:
-                chosen = logged_labels(eg, llm_label_key, names)
-            else:
-                chosen = classify(
-                    eg,
-                    scheme,
-                    exclusive,
-                    client=client,
-                    model=model,
-                    instructions=instructions.strip(),
-                    reasoning_effort=reasoning_effort,
-                )
-            if chosen is None:
-                unusable += 1
-                continue
-            answered.append((eg, chosen))
+                return logged_labels(eg, llm_label_key, names)
+            return classify(
+                eg,
+                scheme,
+                exclusive,
+                client=client,
+                model=model,
+                instructions=instructions.strip(),
+                reasoning_effort=reasoning_effort,
+            )
+
+        for batch in answer_in_batches(todo, answer, batch_size=batch_size, workers=workers):
+            good = [(eg, chosen) for eg, chosen in batch if chosen is not None]
+            unusable += len(batch) - len(good)
+            if incremental and good:
+                save_answers([(eg, chosen, None) for eg, chosen in good], names, output=output.name, session=session)
+                saved += len(good)
+                print(f"Saved {saved} answers so far ({saved + unusable} of {len(todo)} texts done)")
+            elif not incremental:
+                answered.extend(good)
+    if unusable:
+        print(f"{unusable} of {len(todo)} texts have no usable answer and are left out")
+    if incremental:
+        if not saved and not done:
+            raise ValueError("No text has a usable answer from the LLM.")
+        print(f"Saved {saved} of the LLM's answers to '{output.name}'")
+        if llm_label_key:
+            print(
+                f"The input holds the LLM's labels in meta.{llm_label_key}: annotate the "
+                "texts from a blind asset, not the input, or annotators will see them."
+            )
+        return
     if not answered:
         raise ValueError("No text has a usable answer from the LLM.")
-    if unusable:
-        print(f"{unusable} of {len(rows)} texts have no usable answer and are left out")
     if sample_size:
         picked = draw_sample(answered, names, size=sample_size, min_per_label=min_per_label, seed=seed)
     else:
         picked = [(eg, chosen, None) for eg, chosen in answered]
-        random.Random(seed).shuffle(picked)
     # Before the examples are built: building adds to the same dicts
     hidden = {llm_label_key} if llm_label_key else set()
     unlabelled = [
@@ -293,29 +430,8 @@ def llm_to_dataset(
         }
         for eg, _, _ in picked
     ]
-    texts = [eg for eg, _, _ in picked]
-    if binary:
-        built = list(prodigy.recipes.textcat.add_labels_to_stream(texts, names))
-    else:
-        built = list(prodigy.recipes.textcat.add_label_options(texts, names))
-    examples = []
-    for eg, (_, chosen, weight) in zip(built, picked):
-        if binary:
-            eg["answer"] = "accept" if chosen else "reject"
-        else:
-            eg["accept"] = chosen
-            eg["answer"] = "accept"
-        if weight is not None:
-            eg["meta"] = {**(eg.get("meta") or {}), "weight": weight}
-        examples.append(eg)
-    save_examples(
-        output.name,
-        examples,
-        session_id=session,
-        parse_as=TextcatExample if binary else TextcatChoiceExample,
-        view_id="classification" if binary else "choice",
-    )
-    print(f"Saved {len(examples)} of the LLM's answers to '{output.name}'")
+    save_answers(picked, names, output=output.name, session=session)
+    print(f"Saved {len(picked)} of the LLM's answers to '{output.name}'")
     if blind is not None:
         n = blind.write_jsonl(unlabelled)
         print(f"Wrote {n} texts to annotate, without the LLM's labels, to '{blind.name}'")

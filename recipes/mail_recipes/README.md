@@ -13,7 +13,21 @@ template's `llm_recipes` (MIT, Copyright (c) 2026 ExplosionAI GmbH; see
   `http://192.168.5.2:11434/v1`, the address a pod on a Lima cluster reaches the
   Mac's localhost by. So no mail goes to a cloud service unless you point the
   action at one.
-- The package is `mail_recipes`, version 0.1.0.
+- **Long runs are safe to stop.** Without a sample or a blind asset, answers
+  are saved every `--batch-size` texts (default 50), and a rerun skips texts
+  that already have the annotator's answer in the output dataset, so it
+  carries on where a stopped or failed run left off. The original saves only
+  at the end.
+- **Failed requests are retried**, three times with a backoff of 2, 4 and 8
+  seconds, for timeouts, lost connections and 5xx replies; a 4xx reply still
+  stops the action at once. The timeout is 120 seconds, not 60, to leave room
+  for a cold model load.
+- **Replies are read leniently:** label names match whatever their case, and
+  quotes, asterisks and a trailing full stop are ignored.
+- **`--workers`** (default 1) sends that many requests at once. It helps only
+  if the endpoint serves several at once (for Ollama, `OLLAMA_NUM_PARALLEL`)
+  and isn't already busy with one; on an M2 Mac's GPU four at once were no
+  faster.
 
 ## `llm_to_dataset`
 
@@ -26,14 +40,23 @@ dashboard compares them like two annotators.
 `classify` is called once per text: it sends the instructions, the label
 definitions and the text to an OpenAI-compatible chat endpoint and reads label
 names from the reply, or returns `None` for no usable answer. Texts with no
-usable answer are left out and counted in the log. A failed request stops the
-action. The action can also read labels already in each record's `meta`
-(`--llm-label-key`), and draw a sample by the LLM's label (`--sample-size`,
-`--min-per-label`, `--blind`); see the original README.
+usable answer are left out and counted in the log. A request that still fails
+after its retries stops the action, keeping the answers saved so far.
+`ellf actions logs` shows a line after each saved batch. The action can also
+read labels already in each record's `meta` (`--llm-label-key`), and draw a
+sample by the LLM's label (`--sample-size`, `--min-per-label`, `--blind`);
+see the original README.
 
 ```bash
-ellf actions create llm_to_dataset --name mail-pilot-llm --input "Mail (pilot)" --label-scheme "Mail kinds" --labels-exclusive --output mail_pilot_llm --instructions "..." --no-start
+ellf actions create llm_to_dataset --name mail-pilot-llm \
+  --input <pilot asset ID> --label-scheme <scheme asset ID> --labels-exclusive \
+  --output mail_pilot_llm --instructions "$(cat config/llm_instructions.txt)"
 ```
+
+Pass asset IDs (from `ellf assets list`) rather than names: once several
+versions of an asset share a name, a name doesn't say which version is used.
+`ellf actions create` starts the action unless given `--no-start`; don't run
+`ellf actions start` after it, which starts a second copy.
 
 ## Publishing
 
