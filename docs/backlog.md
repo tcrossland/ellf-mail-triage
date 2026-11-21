@@ -2,22 +2,30 @@
 
 In order. Each item says when it is done.
 
-9. **Export and publish.** Export with `/ellf-template`, swap in synthetic
-   sample mail, and fill the fields ellf-templates' AGENTS.md lists for
-   `templates.json`. The README says how to use your own categories (the
-   two assets and the `review` tasks' label lists), that only the default
-   scheme is tested, and that a kind is advice: rules that act on it have
-   to check legal holds and duties to keep records themselves. Tags: Text
-   Classification, LLM Distillation, Evaluation, Data Import & Export,
-   spaCy, and one for Ollama if the list has it.
-   Done when: this repo is public with the template and the write-up, and
-   nothing in it comes from real mail.
-10. **Offer it to Explosion.** By their documented route for contributed
+9. **Header lines and more of the person's labels.** Build the same
+   splits without the header lines (the importer's `--no-header-lines`),
+   train `xx` on them and compare. Label 50 to 100 more messages by hand,
+   drawn by the LLM's label (`llm_to_dataset --min-per-label`) so
+   `AUTOMATED` and `BULK` have enough, and score again against the bar.
+   Done when: both results are in [results.md](results.md), and the bar
+   is passed or the reason it can't be is written down.
+10. **Export and publish.** Export with `/ellf-template`, swap in synthetic
+    sample mail, and fill the fields ellf-templates' AGENTS.md lists for
+    `templates.json`. The README says how to use your own categories (the
+    two assets and the `review` tasks' label lists), that only the default
+    scheme is tested, and that a kind is advice: rules that act on it have
+    to check legal holds and duties to keep records themselves. Tags: Text
+    Classification, LLM Distillation, Evaluation, Data Import & Export,
+    spaCy, and one for Ollama if the list has it.
+    Done when: this repo is public with the template and the write-up, and
+    nothing in it comes from real mail.
+11. **Offer it to Explosion.** By their documented route for contributed
     templates.
     Done when: sent.
-11. **Use it in mailcellar.** Planned in mailcellar once step 8 says the
-    model is good enough: an optional extra, a command that stores each
-    message's kind and score, and a `kind` scope key for offload rules.
+12. **Use it in mailcellar.** Planned in mailcellar once the model passes
+    the bar, or the person judges it good enough as advice: an optional
+    extra, a command that stores each message's kind and score, and a
+    `kind` scope key for offload rules.
     Done when: that plan exists in mailcellar.
 
 ## Done

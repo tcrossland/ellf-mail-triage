@@ -135,7 +135,13 @@ supported but not tested.
   the person's hours. Energy isn't measured; time stands in for it.
 - **Train from a blank pipeline**, so no base model's licence needs
   checking and CPU is enough. English (`en`) or spaCy's multi-language
-  pipeline (`xx`) is chosen on the eval set.
+  pipeline (`xx`) is chosen on the eval set. `xx` is used: level on
+  agreement, with 7 costly mistakes on the eval set against `en`'s 12.
+- **The model learns from the LLM, and SetFit isn't used.** Trained on
+  the LLM's labels, spaCy's classifier agreed with the person as often as
+  the LLM did, and the sentence-embedding models (SetFit among them) less
+  often. A model that learns from the LLM can't do much better than it,
+  so gains come from the person's own labels.
 - **The importer is a script run on the host**, `scripts/mail_to_jsonl.py`,
   standard library only. It reads an mbox (Google Takeout), a folder of
   `.eml` files or a Got Your Back backup, and writes JSONL for

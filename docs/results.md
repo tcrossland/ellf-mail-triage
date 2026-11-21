@@ -176,8 +176,10 @@ for any one language.
 
 - **The small model is as good as the LLM** against the person, and
   labels 1,000 messages in about a second instead of about 70 minutes.
-  The two pipelines are level; `xx` is a little ahead on each measure,
-  none of it clear on 100 messages.
+  The two pipelines are level. `xx` is a little ahead on most measures
+  and makes fewer costly mistakes against the LLM (7 of 231 against 12);
+  `en` agrees with the LLM once more on the eval set, and they tie on
+  English. None of it is clear on 100 messages.
 - **It is not a copy of the LLM.** On the pilot, `xx` gives the LLM's
   label on 78 of 100. It is right on 9 messages where the LLM is wrong,
   and wrong on 9 where the LLM is right; 2 of its 4 costly mistakes are
