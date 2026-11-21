@@ -11,8 +11,8 @@ to build next is in [docs/backlog.md](docs/backlog.md), in order.
 The repo root is the template, in the layout `/ellf-template` exports and
 explosion/ellf-templates uses: `README.md`, `plans/`, `scripts/`, `assets/`,
 `config/`, `recipes/`. Keep those names. The rest is ours and is left out
-when the template is copied elsewhere: `CLAUDE.md`, `docs/`, `tests/`,
-`pyproject.toml`, `uv.lock`, `.python-version`.
+when the template is copied elsewhere: `CLAUDE.md`, `CHANGELOG.md`,
+`docs/`, `tests/`, `pyproject.toml`, `uv.lock`, `.python-version`.
 
 `docs/local/` holds personal notes. It is ignored by git; keep it that way.
 
